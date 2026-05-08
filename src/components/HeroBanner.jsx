@@ -1,97 +1,227 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MENU_ITEMS } from '../data/menu';
 
-const COLLAGE_IMAGES = [
-  MENU_ITEMS.find(i => i.id === 1)?.image,   // Risol Mayo
-  MENU_ITEMS.find(i => i.id === 6)?.image,   // Brownies
-  MENU_ITEMS.find(i => i.id === 2)?.image,   // Lemper
-  MENU_ITEMS.find(i => i.id === 8)?.image,   // Donat
-  MENU_ITEMS.find(i => i.id === 5)?.image,   // Kue Lumpur
-  MENU_ITEMS.find(i => i.id === 3)?.image,   // Pastel Sayur
-  MENU_ITEMS.find(i => i.id === 7)?.image,   // Sus Buah
-].filter(Boolean);
+gsap.registerPlugin(ScrollTrigger);
+
+// Pick the hero background — use a visually strong food image
+const HERO_BG = MENU_ITEMS.find(i => i.id === 1)?.image;
+
+/* ── Staggered word reveal ── */
+function SplitReveal({ text, className, delay = 0, color }) {
+  const words = text.split(' ');
+  return (
+    <span className={className} aria-label={text}>
+      {words.map((word, wi) => (
+        <span key={wi} className="inline-block overflow-hidden mr-[0.25em]">
+          <motion.span
+            className={`inline-block ${color || ''}`}
+            initial={{ y: '110%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{
+              duration: 0.9,
+              delay: delay + wi * 0.1,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+          >
+            {word}
+          </motion.span>
+        </span>
+      ))}
+    </span>
+  );
+}
 
 const HeroBanner = ({ onExplore }) => {
+  const sectionRef = useRef(null);
+  const bgRef = useRef(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setHasScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Parallax — image moves slower than scroll
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.to(bgRef.current, {
+        yPercent: 18,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.8,
+        },
+      });
+    }, sectionRef);
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="relative pt-24 pb-12 overflow-hidden md:pt-32 md:pb-24">
-      <div className="max-w-7xl mx-auto px-5 relative min-h-[520px] md:min-h-[700px] flex items-center justify-center">
-
-        {/* ── Scattered food circles ─────────────── */}
-
-        {/* Top-left */}
+    <section
+      ref={sectionRef}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+    >
+      {/* Sentinel — Navbar watches this to switch text color */}
+      <div id="hero-sentinel" className="absolute bottom-0 left-0 w-full h-1 pointer-events-none" />
+      {/* ── Background image ── */}
+      <div className="absolute inset-0 z-0">
         <img
-          src={COLLAGE_IMAGES[0]}
+          ref={bgRef}
+          src={HERO_BG}
           alt=""
-          className="food-circle absolute animate-float w-[90px] h-[90px] sm:w-[110px] sm:h-[110px] md:w-[180px] md:h-[180px]"
-          style={{ top: '5%', left: '5%' }}
-        />
-        {/* Top-right */}
-        <img
-          src={COLLAGE_IMAGES[1]}
-          alt=""
-          className="food-circle absolute animate-float-slow w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] md:w-[160px] md:h-[160px] delay-200"
-          style={{ top: '0%', right: '10%' }}
-        />
-        {/* Mid-left */}
-        <img
-          src={COLLAGE_IMAGES[2]}
-          alt=""
-          className="food-circle absolute animate-float w-[70px] h-[70px] sm:w-[85px] sm:h-[85px] md:w-[140px] md:h-[140px] delay-400"
-          style={{ top: '35%', left: '2%' }}
-        />
-        {/* Mid-right */}
-        <img
-          src={COLLAGE_IMAGES[3]}
-          alt=""
-          className="food-circle absolute animate-float-slow w-[75px] h-[75px] sm:w-[95px] sm:h-[95px] md:w-[150px] md:h-[150px] delay-300"
-          style={{ top: '30%', right: '2%' }}
-        />
-
-        {/* ── Center text ───────────────────────── */}
-        <div className="relative z-10 text-center px-4 max-w-xl mx-auto">
-          <p className="text-[#ad2a2a] text-xs md:text-sm font-bold uppercase tracking-[0.25em] mb-4 animate-fade-in-up">
-            Katering & Snack Box
-          </p>
-          <h1 className="font-display text-[36px] sm:text-[44px] md:text-[64px] font-bold leading-[1.1] text-[#1C1A17] animate-fade-in-up delay-100">
-            Cita Rasa<br />
-            <span className="italic text-[#ad2a2a]">Rumahan,</span><br />
-            Kualitas Premium!
-          </h1>
-          <p className="text-slate-500 text-sm md:text-base leading-relaxed mt-6 mb-8 max-w-[280px] md:max-w-sm mx-auto animate-fade-in-up delay-200">
-            Kue tradisional, snack box, dan katering berkualitas untuk berbagai acara spesial Anda.
-          </p>
-          <button
-            onClick={onExplore}
-            className="inline-flex items-center gap-2 bg-[#ad2a2a] text-white font-bold text-sm md:text-base px-8 py-3 md:py-4 rounded-full hover:bg-[#8a2222] active:scale-95 transition-all shadow-lg shadow-[#ad2a2a]/20 animate-fade-in-up delay-300 cursor-pointer"
-          >
-            Explore the Menu
-          </button>
-        </div>
-
-        {/* ── Bottom scattered circles ──────────── */}
-
-        {/* Bottom-left */}
-        <img
-          src={COLLAGE_IMAGES[4]}
-          alt=""
-          className="food-circle absolute animate-float-slow w-[85px] h-[85px] sm:w-[105px] sm:h-[105px] md:w-[170px] md:h-[170px] delay-500"
-          style={{ bottom: '10%', left: '8%' }}
-        />
-        {/* Bottom-center */}
-        <img
-          src={COLLAGE_IMAGES[5]}
-          alt=""
-          className="food-circle absolute animate-float w-[70px] h-[70px] sm:w-[90px] sm:h-[90px] md:w-[130px] md:h-[130px] delay-600"
-          style={{ bottom: '2%', left: '40%' }}
-        />
-        {/* Bottom-right */}
-        <img
-          src={COLLAGE_IMAGES[6]}
-          alt=""
-          className="food-circle absolute animate-float-slow w-[80px] h-[80px] sm:w-[100px] sm:h-[100px] md:w-[160px] md:h-[160px] delay-400"
-          style={{ bottom: '15%', right: '8%' }}
+          className="w-full h-[115%] object-cover object-center -mt-[7.5%]"
+          draggable={false}
         />
       </div>
+
+      {/* ── Dark warm overlay ── */}
+      <div
+        className="absolute inset-0 z-10"
+        style={{
+          background: `
+            linear-gradient(
+              to bottom,
+              rgba(20,16,12,0.55) 0%,
+              rgba(20,16,12,0.42) 40%,
+              rgba(20,16,12,0.65) 100%
+            )
+          `,
+        }}
+      />
+
+      {/* ── Vignette edges ── */}
+      <div
+        className="absolute inset-0 z-10 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(10,8,6,0.45) 100%)',
+        }}
+      />
+
+      {/* ── Centered content ── */}
+      <div className="relative z-20 text-center px-5 max-w-2xl mx-auto flex flex-col items-center">
+
+        {/* Eyebrow */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="flex items-center gap-3 mb-7"
+        >
+          <motion.span
+            className="block h-px bg-white/40"
+            initial={{ width: 0 }}
+            animate={{ width: 28 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          />
+          <p className="text-white/70 text-[10px] font-['DM_Sans'] font-bold uppercase tracking-[0.35em]">
+            Katering &amp; Snack Box
+          </p>
+          <motion.span
+            className="block h-px bg-white/40"
+            initial={{ width: 0 }}
+            animate={{ width: 28 }}
+            transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          />
+        </motion.div>
+
+        {/* Headline */}
+        <h1 className="font-['Cormorant_Garamond'] text-[50px] sm:text-[64px] md:text-[78px] font-semibold leading-[1.0] text-white mb-6">
+          <SplitReveal text="Cita Rasa" delay={0.2} />
+          <br />
+          <SplitReveal text="Rumahan," delay={0.38} color="italic text-[#f5b8b8]" />
+          <br />
+          <SplitReveal text="Kualitas Premium" delay={0.56} />
+        </h1>
+
+        {/* Decorative line */}
+        <motion.div
+          className="h-px bg-gradient-to-r from-transparent via-white/40 to-transparent mb-7"
+          initial={{ width: 0, opacity: 0 }}
+          animate={{ width: 56, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.95, ease: [0.22, 1, 0.36, 1] }}
+        />
+
+        {/* Subtext */}
+        <motion.p
+          className="text-white/65 font-['DM_Sans'] text-[13px] md:text-[15px] leading-relaxed mb-10 max-w-[340px]"
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Kue tradisional, snack box, dan katering berkualitas untuk setiap momen spesial Anda.
+        </motion.p>
+
+        {/* CTA row */}
+        <motion.div
+          className="flex items-center gap-4"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 1.12, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {/* Primary button */}
+          <motion.button
+            id="explore-menu-btn"
+            onClick={onExplore}
+            className="group relative inline-flex items-center gap-2.5 overflow-hidden bg-white text-[#1C1A17] font-['DM_Sans'] font-semibold text-[13px] px-8 py-3.5 rounded-full shadow-xl shadow-black/30 cursor-pointer"
+            whileHover={{ scale: 1.04, backgroundColor: '#f5ede0' }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+          >
+            <motion.span
+              className="absolute inset-0 bg-[#ad2a2a]/10 skew-x-12 -translate-x-full"
+              whileHover={{ translateX: '200%' }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
+            <span className="relative">Lihat Menu</span>
+            <motion.svg
+              className="relative w-3.5 h-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              animate={{ x: [0, 3, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </motion.svg>
+          </motion.button>
+
+          {/* Ghost button */}
+          <motion.a
+            href="https://wa.me/628111773319"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 border border-white/35 text-white font-['DM_Sans'] font-semibold text-[13px] px-6 py-3.5 rounded-full hover:bg-white/10 hover:border-white/60 transition-all cursor-pointer"
+            whileTap={{ scale: 0.97 }}
+          >
+            Hubungi Kami
+          </motion.a>
+        </motion.div>
+      </div>
+
+      {/* ── Scroll cue ── */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: hasScrolled ? 0 : 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <span className="text-white/40 text-[9px] uppercase tracking-[0.3em] font-['DM_Sans']">Scroll</span>
+        <motion.div
+          className="w-px h-8 bg-gradient-to-b from-white/50 to-transparent"
+          animate={{ scaleY: [0.4, 1, 0.4], opacity: [0.3, 0.8, 0.3] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </motion.div>
+
     </section>
   );
 };

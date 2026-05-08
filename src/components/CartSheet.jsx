@@ -3,161 +3,169 @@ import {
   X, Minus, Plus, Trash2,
   Droplet, MessageCircle, MapPin, User,
   Package, Store, CheckCircle2, AlertTriangle,
-  ChevronUp, ShoppingBag
+  ShoppingBag
 } from 'lucide-react';
 
 const rupiah = (n) => 'Rp ' + n.toLocaleString('id-ID');
 
 const CartSheet = ({
-  open,
-  onClose,
-  // Regular cart
-  regularCart,
-  updateRegularQty,
-  removeRegular,
-  regularTotal,
-  // Snack box
-  sbConfig,
-  toggleSbItem,
-  setSbConfig,
-  sbRec,
-  sbTotal,
-  sbUnitCost,
-  // Checkout
-  userName,
-  setUserName,
-  deliveryMethod,
-  setDeliveryMethod,
-  address,
-  setAddress,
-  handleOrder,
+  open, onClose, orderMode, setOrderMode,
+  regularCart, updateRegularQty, removeRegular, regularTotal,
+  sbConfig, toggleSbItem, setSbConfig, sbRec, sbTotal, sbUnitCost,
+  userName, setUserName, deliveryMethod, setDeliveryMethod,
+  address, setAddress, handleOrder, savedAddresses = [],
 }) => {
   const [closing, setClosing] = useState(false);
 
   const handleClose = () => {
     setClosing(true);
-    setTimeout(() => {
-      setClosing(false);
-      onClose();
-    }, 280);
+    setTimeout(() => { setClosing(false); onClose(); }, 280);
   };
 
-  // Lock body scroll when open
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = open ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
   if (!open) return null;
 
-  const isEmpty = regularCart.length === 0 && sbConfig.items.length === 0;
-  const grandTotal =
-    (regularCart.length > 0 ? regularTotal : 0) +
-    (sbConfig.items.length > 0 && sbRec.ok ? sbTotal : 0);
+  const isEmpty = orderMode === 'regular' ? regularCart.length === 0 : sbConfig.items.length === 0;
+  const grandTotal = orderMode === 'regular'
+    ? (regularCart.length > 0 ? regularTotal : 0)
+    : (sbConfig.items.length > 0 && sbRec.ok ? sbTotal : 0);
 
   return (
     <div className="fixed inset-0 z-[100]">
       {/* Backdrop */}
       <div
-        className={`absolute inset-0 bg-black/50 ${closing ? 'animate-fade-in opacity-0' : 'sheet-backdrop'}`}
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm ${closing ? 'animate-fade-in opacity-0' : 'sheet-backdrop'}`}
         onClick={handleClose}
       />
 
       {/* Panel */}
-      <div className={`absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#F5EBD9] rounded-t-3xl overflow-hidden
+      <div className={`absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#FDF9F4] rounded-t-3xl overflow-hidden shadow-2xl
         ${closing ? 'animate-slide-down' : 'sheet-panel'}`}
       >
         {/* Drag Handle */}
         <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 bg-slate-300 rounded-full" />
+          <div className="w-10 h-1 bg-[#1C1A17]/15 rounded-full" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pb-3 border-b border-[#ad2a2a]/10">
+        <div className="flex items-center justify-between px-5 pb-3 border-b border-[#1C1A17]/8">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-[#ad2a2a]" />
-            <h2 className="font-extrabold text-lg text-[#1C1A17]">Keranjang</h2>
+            <ShoppingBag className="w-5 h-5 text-[#ad2a2a]" strokeWidth={1.8} />
+            <h2 className="font-['Cormorant_Garamond'] font-semibold text-[20px] italic text-[#1C1A17]">Keranjang</h2>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 rounded-xl hover:bg-black/5 active:scale-90 transition-all"
+            className="p-2 rounded-xl hover:bg-[#1C1A17]/5 active:scale-90 transition-all"
           >
-            <X className="w-5 h-5 text-slate-500" />
+            <X className="w-5 h-5 text-[#3D3A35]" />
           </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="px-5 pt-3 pb-1 border-b border-[#1C1A17]/8">
+          <div className="bg-[#1C1A17]/5 rounded-xl p-1 flex gap-1 w-full">
+            <button
+              onClick={() => setOrderMode('regular')}
+              className={`flex-1 py-2.5 rounded-lg text-xs font-['DM_Sans'] font-semibold transition-all
+                ${orderMode === 'regular' ? 'bg-white shadow-sm text-[#1C1A17]' : 'text-[#8A8278] hover:text-[#3D3A35]'}`}
+            >
+              Satuan {regularCart.length > 0 && `(${regularCart.reduce((s, i) => s + i.qty, 0)})`}
+            </button>
+            <button
+              onClick={() => setOrderMode('snackbox')}
+              className={`flex-1 py-2.5 rounded-lg text-xs font-['DM_Sans'] font-semibold transition-all
+                ${orderMode === 'snackbox' ? 'bg-white shadow-sm text-[#1C1A17]' : 'text-[#8A8278] hover:text-[#3D3A35]'}`}
+            >
+              Snack Box {sbConfig.items.length > 0 && `(${sbConfig.items.length})`}
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto px-5 py-4 space-y-5" style={{ maxHeight: 'calc(92dvh - 80px)' }}>
 
-          {/* Empty State */}
+          {/* ── Empty State ── */}
           {isEmpty && (
-            <div className="text-center py-12">
-              <ShoppingBag className="w-12 h-12 text-[#ad2a2a]/30 mx-auto mb-3" />
-              <p className="text-slate-400 font-semibold text-sm">Keranjang masih kosong</p>
-              <p className="text-slate-300 text-xs mt-1">Pilih menu dari katalog untuk mulai</p>
+            <div className="flex flex-col items-center justify-center py-14 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#ad2a2a]/8 flex items-center justify-center mb-4">
+                <ShoppingBag className="w-7 h-7 text-[#ad2a2a]/40" strokeWidth={1.5} />
+              </div>
+              <p className="font-['Cormorant_Garamond'] text-[22px] font-semibold italic text-[#1C1A17] mb-1.5">
+                Keranjang masih kosong
+              </p>
+              <p className="font-['DM_Sans'] text-[#8A8278] text-[12px] leading-relaxed max-w-[200px]">
+                Pilih menu dari katalog untuk mulai memesan
+              </p>
             </div>
           )}
 
-          {/* ── REGULAR CART ───────────────────────── */}
-          {regularCart.length > 0 && (
+          {/* ── Regular Cart ── */}
+          {orderMode === 'regular' && regularCart.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Store className="w-4 h-4 text-[#ad2a2a]" />
-                <h3 className="font-bold text-sm text-[#1C1A17]">Pesanan Satuan</h3>
+                <h3 className="font-['DM_Sans'] font-bold text-sm text-[#1C1A17]">Pesanan Satuan</h3>
               </div>
               {regularCart.map(item => (
-                <div key={item.id} className="bg-white rounded-xl p-3 flex items-center gap-3 border border-slate-100">
+                <div key={item.id} className="bg-white rounded-xl p-3 flex items-center gap-3 border border-[#1C1A17]/8 shadow-sm">
                   <img src={item.image} alt={item.name} className="w-14 h-14 rounded-lg object-cover shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-[#1C1A17] truncate">{item.name}</p>
-                    <p className="text-[#ad2a2a] text-xs font-semibold">{rupiah(item.price)}</p>
+                    <p className="font-['DM_Sans'] font-bold text-sm text-[#1C1A17] truncate">{item.name}</p>
+                    <p className="text-[#ad2a2a] text-xs font-semibold font-['DM_Sans']">{rupiah(item.price)}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => updateRegularQty(item.id, -1)} className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center active:scale-90">
-                      <Minus className="w-3 h-3 text-slate-600" />
+                    <button
+                      onClick={() => updateRegularQty(item.id, -1)}
+                      className="w-7 h-7 rounded-lg bg-[#EFE3CE] hover:bg-[#E5D5B8] flex items-center justify-center active:scale-90 transition-colors"
+                    >
+                      <Minus className="w-3 h-3 text-[#3D3A35]" />
                     </button>
-                    <span className="w-6 text-center font-bold text-xs">{item.qty}</span>
-                    <button onClick={() => updateRegularQty(item.id, 1)} className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center active:scale-90">
-                      <Plus className="w-3 h-3 text-slate-600" />
+                    <span className="w-6 text-center font-bold text-xs font-['DM_Sans'] text-[#1C1A17]">{item.qty}</span>
+                    <button
+                      onClick={() => updateRegularQty(item.id, 1)}
+                      className="w-7 h-7 rounded-lg bg-[#EFE3CE] hover:bg-[#E5D5B8] flex items-center justify-center active:scale-90 transition-colors"
+                    >
+                      <Plus className="w-3 h-3 text-[#3D3A35]" />
                     </button>
-                    <button onClick={() => removeRegular(item.id)} className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center ml-1 active:scale-90">
-                      <Trash2 className="w-3 h-3 text-red-500" />
+                    <button
+                      onClick={() => removeRegular(item.id)}
+                      className="w-7 h-7 rounded-lg bg-[#ad2a2a]/8 hover:bg-[#ad2a2a]/18 flex items-center justify-center ml-1 active:scale-90 transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3 text-[#ad2a2a]" />
                     </button>
                   </div>
                 </div>
               ))}
-              <div className="flex justify-between items-center pt-2 border-t border-dashed border-slate-200">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Subtotal</span>
-                <span className="font-extrabold text-[#ad2a2a]">{rupiah(regularTotal)}</span>
+              <div className="flex justify-between items-center pt-2 border-t border-dashed border-[#1C1A17]/12">
+                <span className="text-xs font-bold text-[#8A8278] uppercase tracking-wider font-['DM_Sans']">Subtotal</span>
+                <span className="font-extrabold text-[#ad2a2a] font-['DM_Sans']">{rupiah(regularTotal)}</span>
               </div>
             </div>
           )}
 
-          {/* ── SNACK BOX ─────────────────────────── */}
-          {sbConfig.items.length > 0 && (
+          {/* ── Snack Box ── */}
+          {orderMode === 'snackbox' && sbConfig.items.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Package className="w-4 h-4 text-[#ad2a2a]" />
-                <h3 className="font-bold text-sm text-[#1C1A17]">Snack Box ({sbConfig.items.length} Kue)</h3>
+                <h3 className="font-['DM_Sans'] font-bold text-sm text-[#1C1A17]">Snack Box ({sbConfig.items.length} Kue)</h3>
               </div>
 
-              {/* Selected Items */}
               <div className="flex flex-wrap gap-1.5">
                 {sbConfig.items.map(i => (
-                  <span key={i.id} className="bg-[#ad2a2a]/10 text-[#8a2222] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <span key={i.id} className="bg-[#ad2a2a]/10 text-[#8a2222] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 font-['DM_Sans']">
                     {i.name}
-                    <button onClick={() => toggleSbItem(i)} className="hover:text-red-500">
+                    <button onClick={() => toggleSbItem(i)} className="hover:text-[#ad2a2a] transition-colors">
                       <X className="w-3 h-3" />
                     </button>
                   </span>
                 ))}
               </div>
 
-              {/* Status */}
               <div className={`flex items-start gap-2 p-3 rounded-xl text-xs
                 ${sbRec.ok ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}`}
               >
@@ -166,15 +174,13 @@ const CartSheet = ({
                   : <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 }
                 <div>
-                  <p className="font-bold">{sbRec.label}</p>
-                  <p className="text-[11px] opacity-80">{sbRec.hint}</p>
+                  <p className="font-bold font-['DM_Sans']">{sbRec.label}</p>
+                  <p className="text-[11px] opacity-80 font-['DM_Sans']">{sbRec.hint}</p>
                 </div>
               </div>
 
-              {/* Box Config (only if valid) */}
               {sbRec.ok && (
-                <div className="bg-white rounded-xl p-3 border border-slate-100 space-y-3">
-                  {/* Water toggle */}
+                <div className="bg-white rounded-xl p-3 border border-[#1C1A17]/8 space-y-3 shadow-sm">
                   <label className="flex items-center gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -182,57 +188,61 @@ const CartSheet = ({
                       onChange={(e) => setSbConfig({ ...sbConfig, water: e.target.checked })}
                       className="w-4 h-4 accent-[#ad2a2a] rounded"
                     />
-                    <span className="text-xs font-semibold flex items-center gap-1.5">
+                    <span className="text-xs font-semibold flex items-center gap-1.5 font-['DM_Sans'] text-[#3D3A35]">
                       <Droplet className="w-3 h-3 text-blue-500" />
                       Air Mineral (+Rp 1.000/box)
                     </span>
                   </label>
 
-                  {/* Price + Qty */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between pt-2 border-t border-[#1C1A17]/8">
                     <div>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase">Per Box</p>
-                      <p className="font-extrabold text-sm">{rupiah(sbUnitCost)}</p>
+                      <p className="text-[10px] text-[#8A8278] font-bold uppercase font-['DM_Sans']">Per Box</p>
+                      <p className="font-extrabold text-sm font-['DM_Sans'] text-[#1C1A17]">{rupiah(sbUnitCost)}</p>
                     </div>
-                    <div className="flex items-center gap-1 bg-slate-50 border rounded-lg p-0.5">
-                      <button onClick={() => setSbConfig(p => ({ ...p, boxes: Math.max(10, p.boxes - 5) }))} className="w-7 h-7 rounded-md hover:bg-slate-200 flex items-center justify-center">
-                        <Minus className="w-3 h-3" />
+                    <div className="flex items-center gap-1 bg-[#F7EFE2] border border-[#1C1A17]/10 rounded-lg p-0.5">
+                      <button
+                        onClick={() => setSbConfig(p => ({ ...p, boxes: Math.max(10, p.boxes - 5) }))}
+                        className="w-7 h-7 rounded-md hover:bg-[#EFE3CE] flex items-center justify-center transition-colors"
+                      >
+                        <Minus className="w-3 h-3 text-[#3D3A35]" />
                       </button>
                       <input
                         type="number"
                         value={sbConfig.boxes}
                         onChange={(e) => setSbConfig(p => ({ ...p, boxes: Math.max(10, Number(e.target.value)) }))}
-                        className="w-10 text-center font-bold text-sm no-arrows bg-transparent"
+                        className="w-10 text-center font-bold text-sm no-arrows bg-transparent font-['DM_Sans'] text-[#1C1A17]"
                         min="10"
                       />
-                      <button onClick={() => setSbConfig(p => ({ ...p, boxes: p.boxes + 5 }))} className="w-7 h-7 rounded-md hover:bg-slate-200 flex items-center justify-center">
-                        <Plus className="w-3 h-3" />
+                      <button
+                        onClick={() => setSbConfig(p => ({ ...p, boxes: p.boxes + 5 }))}
+                        className="w-7 h-7 rounded-md hover:bg-[#EFE3CE] flex items-center justify-center transition-colors"
+                      >
+                        <Plus className="w-3 h-3 text-[#3D3A35]" />
                       </button>
                     </div>
                   </div>
 
-                  {/* Subtotal */}
-                  <div className="flex justify-between items-center bg-[#ad2a2a]/5 rounded-lg p-2.5 border border-[#ad2a2a]/20">
-                    <span className="text-xs font-bold text-[#8a2222]">Subtotal</span>
-                    <span className="font-extrabold text-[#ad2a2a]">{rupiah(sbTotal)}</span>
+                  <div className="flex justify-between items-center bg-[#ad2a2a]/6 rounded-lg p-2.5 border border-[#ad2a2a]/15">
+                    <span className="text-xs font-bold text-[#8a2222] font-['DM_Sans']">Subtotal</span>
+                    <span className="font-extrabold text-[#ad2a2a] font-['DM_Sans']">{rupiah(sbTotal)}</span>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* ── CHECKOUT FORM ─────────────────────── */}
+          {/* ── Checkout Form ── */}
           {!isEmpty && (
-            <div className="space-y-4 pt-4 border-t border-[#ad2a2a]/10">
+            <div className="space-y-4 pt-4 border-t border-[#1C1A17]/8">
               {/* Grand Total */}
-              <div className="bg-[#1C1A17] rounded-2xl p-4 text-center">
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Total Pesanan</p>
-                <p className="text-3xl font-black text-[#ad2a2a]">{rupiah(grandTotal)}</p>
+              <div className="bg-[#1C1A17] rounded-2xl p-5 text-center shadow-lg">
+                <p className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1 font-['DM_Sans']">Total Pesanan</p>
+                <p className="text-3xl font-black text-white font-['DM_Sans']">{rupiah(grandTotal)}</p>
               </div>
 
               {/* Name */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <label className="text-[11px] font-bold text-[#8A8278] uppercase tracking-wider flex items-center gap-1 font-['DM_Sans']">
                   <User className="w-3 h-3" /> Nama Pemesan
                 </label>
                 <input
@@ -240,47 +250,68 @@ const CartSheet = ({
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
                   placeholder="Masukkan nama Anda..."
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:border-[#ad2a2a] focus:outline-none focus:ring-2 focus:ring-[#ad2a2a]/10 transition-all"
+                  className="w-full bg-white border border-[#1C1A17]/10 rounded-xl px-4 py-3 text-sm font-medium font-['DM_Sans'] text-[#1C1A17] placeholder:text-[#8A8278] focus:border-[#ad2a2a]/50 focus:outline-none focus:ring-2 focus:ring-[#ad2a2a]/10 transition-all"
                 />
               </div>
 
               {/* Delivery Method */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <label className="text-[11px] font-bold text-[#8A8278] uppercase tracking-wider flex items-center gap-1 font-['DM_Sans']">
                   <MapPin className="w-3 h-3" /> Metode Pengambilan
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setDeliveryMethod('pickup')}
-                    className={`py-3 rounded-xl border-2 text-sm font-bold transition-all active:scale-95
-                      ${deliveryMethod === 'pickup'
-                        ? 'border-[#ad2a2a] bg-[#ad2a2a]/5 text-[#ad2a2a]'
-                        : 'border-slate-200 bg-white text-slate-500'}`}
-                  >
-                    Self Pickup
-                  </button>
-                  <button
-                    onClick={() => setDeliveryMethod('delivery')}
-                    className={`py-3 rounded-xl border-2 text-sm font-bold transition-all active:scale-95
-                      ${deliveryMethod === 'delivery'
-                        ? 'border-[#ad2a2a] bg-[#ad2a2a]/5 text-[#ad2a2a]'
-                        : 'border-slate-200 bg-white text-slate-500'}`}
-                  >
-                    Di Antar
-                  </button>
+                  {[
+                    { val: 'pickup', label: 'Self Pickup' },
+                    { val: 'delivery', label: 'Di Antar' },
+                  ].map(({ val, label }) => (
+                    <button
+                      key={val}
+                      onClick={() => setDeliveryMethod(val)}
+                      className={`py-3 rounded-xl border-2 text-sm font-bold font-['DM_Sans'] transition-all active:scale-95
+                        ${deliveryMethod === val
+                          ? 'border-[#ad2a2a] bg-[#ad2a2a]/6 text-[#ad2a2a]'
+                          : 'border-[#1C1A17]/10 bg-white text-[#8A8278] hover:border-[#1C1A17]/25'
+                        }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Address (conditional) */}
+              {/* Address */}
               {deliveryMethod === 'delivery' && (
-                <div className="space-y-1.5 animate-fade-in">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Alamat Lengkap</label>
+                <div className="space-y-3 animate-fade-in">
+                  <label className="text-[11px] font-bold text-[#8A8278] uppercase tracking-wider font-['DM_Sans']">Alamat Lengkap</label>
+                  {savedAddresses.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      {savedAddresses.map((addr, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setAddress(addr.text)}
+                          className={`text-left p-3 rounded-xl border-2 transition-all active:scale-[0.98]
+                            ${address === addr.text
+                              ? 'border-[#ad2a2a] bg-[#ad2a2a]/5'
+                              : 'border-[#1C1A17]/10 bg-white hover:border-[#ad2a2a]/40'
+                            }`}
+                        >
+                          <p className={`font-bold text-sm mb-0.5 font-['DM_Sans'] ${address === addr.text ? 'text-[#ad2a2a]' : 'text-[#1C1A17]'}`}>{addr.title}</p>
+                          <p className="text-xs text-[#8A8278] leading-relaxed font-['DM_Sans']">{addr.text}</p>
+                        </button>
+                      ))}
+                      <div className="relative flex items-center py-2">
+                        <div className="flex-grow border-t border-[#1C1A17]/10" />
+                        <span className="flex-shrink-0 mx-4 text-[#8A8278] text-[10px] uppercase font-bold tracking-wider font-['DM_Sans']">Atau ketik alamat lain</span>
+                        <div className="flex-grow border-t border-[#1C1A17]/10" />
+                      </div>
+                    </div>
+                  )}
                   <textarea
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Masukkan alamat pengantaran..."
+                    placeholder={savedAddresses.length > 0 ? 'Ketik alamat manual di sini...' : 'Masukkan alamat pengantaran...'}
                     rows="3"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:border-[#ad2a2a] focus:outline-none focus:ring-2 focus:ring-[#ad2a2a]/10 transition-all resize-none"
+                    className="w-full bg-white border border-[#1C1A17]/10 rounded-xl px-4 py-3 text-sm font-medium font-['DM_Sans'] text-[#1C1A17] placeholder:text-[#8A8278] focus:border-[#ad2a2a]/50 focus:outline-none focus:ring-2 focus:ring-[#ad2a2a]/10 transition-all resize-none"
                   />
                 </div>
               )}
@@ -288,13 +319,12 @@ const CartSheet = ({
               {/* WhatsApp Button */}
               <button
                 onClick={handleOrder}
-                className="w-full py-4 bg-[#ad2a2a] hover:bg-[#8a2222] text-white font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-[#ad2a2a]/20"
+                className="w-full py-4 bg-[#ad2a2a] hover:bg-[#8a2020] text-white font-['DM_Sans'] font-semibold text-[13px] rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-[#ad2a2a]/25 tracking-wide"
               >
                 <MessageCircle className="w-5 h-5" />
                 Kirim Pesanan via WhatsApp
               </button>
 
-              {/* Safe bottom padding */}
               <div className="pb-safe" />
             </div>
           )}

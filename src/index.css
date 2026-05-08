@@ -3,12 +3,17 @@
 /* ── Design Tokens ───────────────────────────── */
 @layer base {
   :root {
-    --font-body: 'Outfit', sans-serif;
-    --font-display: 'Playfair Display', serif;
-    --c-orange: #EA580C;
-    --c-orange-light: #FFF7ED;
-    --c-cream: #F5EBD9;
+    --font-body: 'DM Sans', sans-serif;
+    --font-display: 'Cormorant Garamond', serif;
+    --c-cream: #F7EFE2;
+    --c-cream-dark: #EFE3CE;
+    --c-cream-light: #FDF8F2;
+    --c-red: #ad2a2a;
+    --c-red-deep: #8a2020;
+    --c-red-light: rgba(173, 42, 42, 0.08);
     --c-dark: #1C1A17;
+    --c-dark-muted: #3D3A35;
+    --c-muted: #8A8278;
   }
 
   * {
@@ -23,7 +28,13 @@
 
   body {
     font-family: var(--font-body);
+    /* Premium warm background — subtle radial gradient with noise-like texture */
     background-color: var(--c-cream);
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(173, 42, 42, 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(180, 130, 70, 0.06) 0%, transparent 50%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    background-attachment: fixed;
     color: var(--c-dark);
     overflow-x: hidden;
   }
@@ -45,7 +56,7 @@
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -53,7 +64,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #F9731640;
+  background: rgba(173, 42, 42, 0.2);
   border-radius: 99px;
 }
 
@@ -72,7 +83,7 @@ input[type=number].no-arrows {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(20px);
   }
 
   to {
@@ -82,166 +93,114 @@ input[type=number].no-arrows {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-
-  to {
-    transform: translateY(0);
-  }
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 @keyframes slideDown {
-  from {
-    transform: translateY(0);
-  }
-
-  to {
-    transform: translateY(100%);
-  }
+  from { transform: translateY(0); }
+  to { transform: translateY(100%); }
 }
 
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.92);
+    transform: scale(0.88);
   }
-
   to {
     opacity: 1;
     transform: scale(1);
   }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-
-  100% {
-    background-position: 200% 0;
-  }
-}
-
 @keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-8px);
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
 }
 
 @keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
 
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: .7;
-  }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp .5s ease-out both;
+  animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-fade-in {
-  animation: fadeIn .4s ease-out both;
+  animation: fadeIn 0.4s ease-out both;
 }
 
 .animate-slide-up {
-  animation: slideUp .35s cubic-bezier(.32, .72, 0, 1) both;
+  animation: slideUp 0.38s cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
 .animate-slide-down {
-  animation: slideDown .3s ease-in both;
+  animation: slideDown 0.3s ease-in both;
 }
 
 .animate-scale-in {
-  animation: scaleIn .3s ease-out both;
+  animation: scaleIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-float {
-  animation: float 4s ease-in-out infinite;
+  animation: float 5s ease-in-out infinite;
 }
 
 .animate-float-slow {
-  animation: float 6s ease-in-out infinite reverse;
+  animation: float 7s ease-in-out infinite reverse;
 }
 
 .animate-pulse-soft {
-  animation: pulse-soft 2s ease-in-out infinite;
+  animation: pulse-soft 2.5s ease-in-out infinite;
 }
 
+/* Food circles — hero scattered images */
 .food-circle {
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
+  box-shadow:
+    0 16px 40px -12px rgba(28, 26, 23, 0.22),
+    0 0 0 3px rgba(247, 239, 226, 0.8),
+    0 0 0 6px rgba(173, 42, 42, 0.06);
 }
 
-/* stagger children */
-.stagger>*:nth-child(1) {
-  animation-delay: 0ms;
-}
-
-.stagger>*:nth-child(2) {
-  animation-delay: 60ms;
-}
-
-.stagger>*:nth-child(3) {
-  animation-delay: 120ms;
-}
-
-.stagger>*:nth-child(4) {
-  animation-delay: 180ms;
-}
-
-.stagger>*:nth-child(5) {
-  animation-delay: 240ms;
-}
-
-.stagger>*:nth-child(6) {
-  animation-delay: 300ms;
-}
-
-.stagger>*:nth-child(7) {
-  animation-delay: 360ms;
-}
-
-.stagger>*:nth-child(8) {
-  animation-delay: 420ms;
-}
+/* Stagger children */
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 70ms; }
+.stagger > *:nth-child(3) { animation-delay: 140ms; }
+.stagger > *:nth-child(4) { animation-delay: 210ms; }
+.stagger > *:nth-child(5) { animation-delay: 280ms; }
+.stagger > *:nth-child(6) { animation-delay: 350ms; }
+.stagger > *:nth-child(7) { animation-delay: 420ms; }
+.stagger > *:nth-child(8) { animation-delay: 490ms; }
 
 /* ── Cart Sheet ──────────────────────────────── */
 .sheet-backdrop {
-  animation: fadeIn .25s ease-out both;
+  animation: fadeIn 0.25s ease-out both;
 }
 
 .sheet-panel {
-  animation: slideUp .35s cubic-bezier(.32, .72, 0, 1) both;
+  animation: slideUp 0.38s cubic-bezier(0.32, 0.72, 0, 1) both;
   max-height: 92vh;
   max-height: 92dvh;
 }
 
 /* ── Product Card ────────────────────────────── */
 .product-card {
-  transition: transform .2s ease, box-shadow .2s ease;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  background: rgba(255, 252, 247, 0.75);
+  backdrop-filter: blur(4px);
 }
 
 .product-card:active {
@@ -250,33 +209,61 @@ input[type=number].no-arrows {
 
 @media (hover: hover) {
   .product-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, .12);
+    transform: translateY(-5px);
+    box-shadow:
+      0 16px 40px -10px rgba(28, 26, 23, 0.14),
+      0 2px 8px rgba(28, 26, 23, 0.06);
   }
 
   .product-card:hover .product-img {
-    transform: scale(1.08);
+    transform: scale(1.07);
   }
 }
 
 .product-img {
-  transition: transform .4s ease;
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ── Tag Badge ───────────────────────────────── */
 .tag-badge {
-  font-size: 10px;
-  letter-spacing: 0.05em;
+  font-size: 9px;
+  letter-spacing: 0.06em;
   line-height: 1;
+  font-family: var(--font-body);
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 /* ── Glass effect ────────────────────────────── */
 .glass {
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
 /* ── Safe area for mobile ────────────────────── */
 .pb-safe {
   padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* ── Divider Line ────────────────────────────── */
+.divider-accent {
+  width: 48px;
+  height: 1.5px;
+  background: linear-gradient(90deg, var(--c-red), transparent);
+  border-radius: 99px;
+}
+
+/* ── Mode Tab — active pill ──────────────────── */
+.mode-tab-active {
+  background: var(--c-dark);
+  color: #fff;
+  font-weight: 700;
+  box-shadow:
+    0 2px 8px rgba(28, 26, 23, 0.18),
+    0 1px 3px rgba(28, 26, 23, 0.1);
+}
+
+.mode-tab-inactive {
+  color: var(--c-muted);
+  font-weight: 500;
 }

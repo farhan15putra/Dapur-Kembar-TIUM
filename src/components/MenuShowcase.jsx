@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { CATEGORIES, MENU_ITEMS } from '../data/menu';
 
 const CATEGORY_DATA = [
@@ -6,62 +7,142 @@ const CATEGORY_DATA = [
     ...CATEGORIES.find(c => c.id === 'kue-asin'),
     image: MENU_ITEMS.find(i => i.id === 1)?.image,
     copy: 'Risol mayo, lemper, pastel, dan sosis solo — cemilan asin gurih untuk setiap acara.',
+    index: '01',
   },
   {
     ...CATEGORIES.find(c => c.id === 'kue-manis'),
     image: MENU_ITEMS.find(i => i.id === 6)?.image,
     copy: 'Brownies, kue lumpur, sus buah, dan dadar gulung — manis yang bikin ketagihan.',
-  }
+    index: '02',
+  },
+  {
+    ...CATEGORIES.find(c => c.id === 'minuman'),
+    image: MENU_ITEMS.find(i => i.id === 301)?.image,
+    copy: 'Air mineral cup dan botol — pelengkap sempurna untuk setiap sajian Snack Box.',
+    index: '03',
+  },
 ];
 
-const MenuShowcase = ({ onCategoryClick }) => {
+const CategoryStrip = ({ cat, idx, onCategoryClick }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-80px 0px' });
+  const isEven = idx % 2 === 0;
+
   return (
-    <section className="max-w-7xl mx-auto px-5 py-12 md:py-24">
+    <motion.div
+      ref={ref}
+      id={`showcase-${cat.id}`}
+      onClick={() => onCategoryClick(cat.id)}
+      className="group cursor-pointer"
+      initial={{ opacity: 0, y: 36 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.85, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {/* Divider top */}
+      <div className="h-px bg-[#1C1A17]/10 group-hover:bg-[#ad2a2a]/30 transition-colors duration-500" />
+
+      <div className={`flex items-center gap-6 md:gap-12 py-7 md:py-10 px-0 ${isEven ? 'flex-row' : 'flex-row-reverse'}`}>
+
+        {/* Index number */}
+        <span className="font-['Cormorant_Garamond'] text-[48px] md:text-[64px] font-semibold text-[#1C1A17]/10 group-hover:text-[#ad2a2a]/20 leading-none shrink-0 w-[60px] md:w-[80px] text-center transition-colors duration-400 select-none">
+          {cat.index}
+        </span>
+
+        {/* Image */}
+        <div className="shrink-0 relative overflow-hidden rounded-xl w-[80px] h-[80px] md:w-[112px] md:h-[112px] shadow-md shadow-black/10">
+          <motion.img
+            src={cat.image}
+            alt={cat.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            whileHover={{ scale: 1.08 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/10" />
+        </div>
+
+        {/* Text block */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-['Cormorant_Garamond'] text-[24px] md:text-[32px] lg:text-[38px] font-semibold text-[#1C1A17] leading-tight group-hover:text-[#ad2a2a] transition-colors duration-300">
+            {cat.name}
+          </h3>
+          <p className="font-['DM_Sans'] text-[#8A8278] text-[12px] md:text-[13px] leading-relaxed mt-1.5 max-w-[360px]">
+            {cat.copy}
+          </p>
+        </div>
+
+        {/* Explore arrow */}
+        <div className="shrink-0 ml-auto flex items-center gap-2 text-[#1C1A17]/20 group-hover:text-[#ad2a2a] transition-colors duration-300">
+          <span className="font-['DM_Sans'] text-[11px] font-bold uppercase tracking-widest hidden md:block">
+            Jelajahi
+          </span>
+          <motion.svg
+            className="w-5 h-5 md:w-6 md:h-6"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            animate={{ x: [0, 4, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </motion.svg>
+        </div>
+
+      </div>
+    </motion.div>
+  );
+};
+
+const MenuShowcase = ({ onCategoryClick }) => {
+  const headerRef = useRef(null);
+  const inView = useInView(headerRef, { once: true, margin: '-100px 0px' });
+
+  return (
+    <section className="max-w-7xl mx-auto px-5 md:px-10 py-16 md:py-28">
+
       {/* Section header */}
-      <div className="text-center mb-12 md:mb-20">
-        <p className="text-[#ad2a2a] text-xs md:text-sm font-bold uppercase tracking-[0.2em] mb-2 md:mb-4">Pilihan Terbaik</p>
-        <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-[#1C1A17]">
-          Menu<br className="md:hidden" />
-          <span className="italic md:ml-3">Kami</span>
-        </h2>
-        <p className="text-slate-500 text-sm md:text-base leading-relaxed mt-4 max-w-[300px] md:max-w-md mx-auto">
-          Temukan ragam kue dan masakan khas Dapur Kembar yang dibuat dengan cinta dan bahan pilihan.
-        </p>
+      <div ref={headerRef} className="flex flex-col md:flex-row md:items-end md:justify-between mb-10 md:mb-16 gap-6">
+        <div>
+          <motion.p
+            className="text-[#ad2a2a] text-[10px] font-['DM_Sans'] font-bold uppercase tracking-[0.28em] mb-3"
+            initial={{ opacity: 0, x: -12 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            Pilihan Terbaik
+          </motion.p>
+
+          <motion.h2
+            className="font-['Cormorant_Garamond'] text-[38px] sm:text-[48px] md:text-[58px] font-semibold text-[#1C1A17] leading-tight"
+            initial={{ opacity: 0, y: 24 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          >
+            Menu <span className="italic text-[#ad2a2a]">Kami</span>
+          </motion.h2>
+        </div>
+
+        <motion.p
+          className="font-['DM_Sans'] text-[#8A8278] text-[13px] md:text-[14px] leading-relaxed max-w-[280px] md:text-right"
+          initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Ragam kue dan jajanan khas Dapur Kembar, dibuat dengan cinta dan bahan pilihan.
+        </motion.p>
       </div>
 
-      {/* Grid for desktop, stack for mobile */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-x-16 md:gap-y-20 max-w-5xl mx-auto">
-        {CATEGORY_DATA.map((cat, idx) => {
-          // On mobile, alternate left-right. On desktop, they just flow in the grid.
-          const isOdd = idx % 2 === 0; 
-          return (
-            <div
-              key={cat.id}
-              onClick={() => onCategoryClick(cat.id)}
-              className="flex items-center gap-6 cursor-pointer group md:flex-row"
-              style={{ flexDirection: isOdd ? 'row' : 'row-reverse' }}
-            >
-              {/* Circle Image */}
-              <div className="shrink-0">
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="food-circle w-[110px] h-[110px] sm:w-[130px] sm:h-[130px] md:w-[160px] md:h-[160px] group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-              </div>
-              {/* Text */}
-              <div className={isOdd ? 'text-left md:text-left' : 'text-right md:text-left'}>
-                <h3 className="font-display text-xl md:text-3xl font-bold text-[#1C1A17] italic mb-1 md:mb-2">{cat.name}</h3>
-                <p className="text-slate-500 text-xs md:text-sm leading-relaxed">{cat.copy}</p>
-                <span className="inline-block mt-2 md:mt-4 text-[#ad2a2a] text-[11px] md:text-xs font-bold uppercase tracking-wider group-hover:underline">
-                  Explore →
-                </span>
-              </div>
-            </div>
-          );
-        })}
+      {/* Category strips */}
+      <div>
+        {CATEGORY_DATA.map((cat, idx) => (
+          <CategoryStrip key={cat.id} cat={cat} idx={idx} onCategoryClick={onCategoryClick} />
+        ))}
+        <div className="h-px bg-[#1C1A17]/10" />
       </div>
+
     </section>
   );
 };
