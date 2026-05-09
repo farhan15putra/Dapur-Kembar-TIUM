@@ -1,206 +1,423 @@
-import React, { useState } from 'react';
-import { LogOut, PackageSearch, ChefHat, Search, Edit2, CheckCircle2, Clock } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import {
+  LogOut, ChefHat, Search, Edit2,
+  Plus, Trash2, ToggleLeft, ToggleRight, X, Save, ImagePlus, AlertTriangle
+} from 'lucide-react';
+import { useMenu } from '../context/MenuContext';
+import { CATEGORIES } from '../data/menu';
 
-const rupiah = (n) => 'Rp ' + n.toLocaleString('id-ID');
+const rupiah = (n) => 'Rp ' + Number(n).toLocaleString('id-ID');
 
+const EMPTY_FORM = { name: '', category: 'kue-asin', price: '', unit: '/ pcs', description: '', image: '', tag: '' };
+
+// ── Delete Confirm Dialog ────────────────────────────────────────────────────
+function DeleteConfirmDialog({ itemName, onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+        <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <AlertTriangle className="w-6 h-6 text-red-500" />
+        </div>
+        <h3 className="font-bold text-lg text-[#1C1A17] mb-1">Hapus Menu?</h3>
+        <p className="text-sm text-[#8A8278] mb-6">
+          <span className="font-semibold text-[#1C1A17]">"{itemName}"</span> akan dihapus secara permanen dari katalog.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            Batal
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-3 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors"
+          >
+            Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Menu Form Modal ──────────────────────────────────────────────────────────
+function MenuFormModal({ initial, onSave, onClose }) {
+  const [form, setForm] = useState(initial || EMPTY_FORM);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const fileInputRef = useRef(null);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return alert('File harus berupa gambar.');
+    if (file.size > 5 * 1024 * 1024) return alert('Ukuran gambar maksimal 5MB.');
+    const reader = new FileReader();
+    reader.onload = (ev) => set('image', ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = () => {
+    if (!form.name.trim() || !form.price) return alert('Nama dan harga wajib diisi.');
+    onSave({ ...form, price: Number(form.price) });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <h3 className="font-bold text-lg text-[#1C1A17]">{initial ? 'Edit Menu' : 'Tambah Menu Baru'}</h3>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          {[
+            { label: 'Nama Menu', key: 'name', type: 'text', placeholder: 'cth: Risol Mayo' },
+            { label: 'Harga (Rp)', key: 'price', type: 'number', placeholder: 'cth: 3500' },
+            { label: 'Satuan', key: 'unit', type: 'text', placeholder: 'cth: / pcs' },
+            { label: 'Tag (opsional)', key: 'tag', type: 'text', placeholder: 'cth: Best Seller' },
+          ].map(({ label, key, type, placeholder }) => (
+            <div key={key}>
+              <label className="block text-[11px] font-bold text-[#8A8278] uppercase tracking-wider mb-1.5">{label}</label>
+              <input
+                type={type}
+                value={form[key]}
+                onChange={e => set(key, e.target.value)}
+                placeholder={placeholder}
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:border-[#ad2a2a] focus:ring-2 focus:ring-[#ad2a2a]/10 outline-none transition-all"
+              />
+            </div>
+          ))}
+
+          {/* Upload Gambar */}
+          <div>
+            <label className="block text-[11px] font-bold text-[#8A8278] uppercase tracking-wider mb-1.5">Foto Menu</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            {form.image ? (
+              <div className="relative group w-full h-40 rounded-xl overflow-hidden border border-slate-200">
+                <img src={form.image} alt="preview" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current.click()}
+                    className="px-3 py-2 bg-white text-[#1C1A17] text-xs font-bold rounded-lg hover:bg-slate-100 transition-colors"
+                  >
+                    Ganti Foto
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { set('image', ''); fileInputRef.current.value = ''; }}
+                    className="px-3 py-2 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                className="w-full h-32 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center gap-2 text-[#8A8278] hover:border-[#ad2a2a] hover:text-[#ad2a2a] hover:bg-[#ad2a2a]/5 transition-all"
+              >
+                <ImagePlus className="w-7 h-7" />
+                <span className="text-xs font-semibold">Klik untuk upload foto</span>
+                <span className="text-[10px]">PNG, JPG, WEBP · Maks. 5MB</span>
+              </button>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-[#8A8278] uppercase tracking-wider mb-1.5">Kategori</label>
+            <select
+              value={form.category}
+              onChange={e => set('category', e.target.value)}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:border-[#ad2a2a] focus:ring-2 focus:ring-[#ad2a2a]/10 outline-none transition-all"
+            >
+              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold text-[#8A8278] uppercase tracking-wider mb-1.5">Deskripsi</label>
+            <textarea
+              value={form.description}
+              onChange={e => set('description', e.target.value)}
+              placeholder="Deskripsi singkat menu..."
+              rows={3}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:border-[#ad2a2a] focus:ring-2 focus:ring-[#ad2a2a]/10 outline-none transition-all resize-none"
+            />
+          </div>
+        </div>
+        <div className="flex gap-3 p-6 border-t border-slate-100">
+          <button onClick={onClose} className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">Batal</button>
+          <button onClick={handleSave} className="flex-1 py-3 bg-[#ad2a2a] text-white rounded-xl text-sm font-bold hover:bg-[#8a2222] transition-colors flex items-center justify-center gap-2">
+            <Save className="w-4 h-4" /> Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Menu Card (Mobile) ───────────────────────────────────────────────────────
+function MenuCard({ item, onEdit, onDelete, onToggleStock }) {
+  const cat = CATEGORIES.find(c => c.id === item.category);
+  return (
+    <div className="bg-white rounded-2xl p-4 border border-[#1C1A17]/5 shadow-sm flex gap-3">
+      {item.image ? (
+        <img
+          src={item.image}
+          alt={item.name}
+          className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+          onError={e => { e.target.style.display = 'none'; }}
+        />
+      ) : (
+        <div className="w-16 h-16 rounded-xl bg-slate-100 flex-shrink-0 flex items-center justify-center">
+          <ChefHat className="w-6 h-6 text-slate-300" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <div className="min-w-0">
+            <p className="font-bold text-sm text-[#1C1A17] truncate">{item.name}</p>
+            {item.tag && (
+              <span className="text-[10px] font-bold text-[#ad2a2a] bg-[#ad2a2a]/10 px-1.5 py-0.5 rounded-md">{item.tag}</span>
+            )}
+          </div>
+          <div className="flex gap-1.5 flex-shrink-0">
+            <button
+              onClick={() => onEdit(item)}
+              className="p-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onDelete(item)}
+              className="p-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+        <p className="font-bold text-sm text-[#ad2a2a]">{rupiah(item.price)} <span className="font-normal text-[10px] text-[#8A8278]">{item.unit}</span></p>
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">{cat?.name || item.category}</span>
+          <button
+            onClick={() => onToggleStock(item.id)}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all ${item.stock === 'Tersedia' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}
+          >
+            {item.stock === 'Tersedia' ? <ToggleRight className="w-3 h-3" /> : <ToggleLeft className="w-3 h-3" />}
+            {item.stock}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 const AdminDashboard = ({ user, onLogout }) => {
-  const [activeTab, setActiveTab] = useState('orders');
+  const { menuItems, addMenuItem, updateMenuItem, deleteMenuItem, toggleStock } = useMenu();
   const [searchQuery, setSearchQuery] = useState('');
+  const [modalState, setModalState] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null); // item to delete
 
-  // Dummy data for incoming orders
-  const [orders, setOrders] = useState([
-    { id: '#DK-2041', name: 'Budi Santoso', items: '3x Risol Mayo, 1x Nasi Bakar', total: 65000, status: 'Baru', date: 'Hari ini, 10:30' },
-    { id: '#DK-2040', name: 'Siti Aminah', items: '20x Snack Box M', total: 400000, status: 'Diproses', date: 'Hari ini, 08:15' },
-    { id: '#DK-2038', name: 'Kantor Dirjen', items: '50x Snack Box L', total: 1250000, status: 'Selesai', date: 'Kemarin, 14:00' },
-  ]);
+  const filteredMenu = menuItems.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  // Dummy data for menu management
-  const [menuItems, setMenuItems] = useState([
-    { id: '1', name: 'Risol Mayo Beef', price: 5000, stock: 'Tersedia' },
-    { id: '2', name: 'Nasi Bakar Cumi', price: 15000, stock: 'Tersedia' },
-    { id: '3', name: 'Kue Ku', price: 3500, stock: 'Habis' },
-  ]);
+  const handleSaveMenu = (formData) => {
+    if (modalState.mode === 'add') addMenuItem(formData);
+    else updateMenuItem(modalState.item.id, formData);
+    setModalState(null);
+  };
 
-  const handleUpdateStatus = (id, newStatus) => {
-    setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
+  const handleDeleteConfirm = () => {
+    if (deleteTarget) {
+      deleteMenuItem(deleteTarget.id);
+      setDeleteTarget(null);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#FDF9F4] font-['DM_Sans'] text-[#1C1A17]">
-      {/* Navbar Admin */}
+      {/* Navbar */}
       <nav className="bg-white border-b border-[#ad2a2a]/10 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#ad2a2a] rounded-lg flex items-center justify-center shadow-md">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-gradient-to-br from-[#ad2a2a] to-[#7a1d1d] rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
               <ChefHat className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="font-['Cormorant_Garamond'] text-xl font-bold italic text-[#ad2a2a] leading-none">Admin Panel</h1>
-              <p className="text-[10px] font-bold text-[#8A8278] uppercase tracking-wider">Dapur Kembar</p>
+              <h1 className="font-['Cormorant_Garamond'] text-lg sm:text-xl font-bold italic text-[#ad2a2a] leading-none">Admin Panel</h1>
+              <p className="text-[9px] sm:text-[10px] font-bold text-[#8A8278] uppercase tracking-wider">Dapur Kembar</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-bold">{user.name}</p>
-              <p className="text-[10px] text-[#8A8278] uppercase tracking-wider">{user.role}</p>
+              <p className="text-[10px] text-[#8A8278] uppercase tracking-wider">Administrator</p>
             </div>
-            <button 
+            <button
               onClick={onLogout}
-              className="p-2 rounded-xl text-red-600 hover:bg-red-50 active:scale-95 transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 active:scale-95 transition-all text-xs font-bold border border-red-100"
               title="Keluar"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Keluar</span>
             </button>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto p-5 pb-20">
-        
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6 bg-white p-1 rounded-xl shadow-sm border border-[#1C1A17]/5">
-          <button
-            onClick={() => setActiveTab('orders')}
-            className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'orders' ? 'bg-[#ad2a2a] text-white shadow-md' : 'text-[#8A8278] hover:bg-slate-50'}`}
-          >
-            <PackageSearch className="w-4 h-4" />
-            Pesanan Masuk
-          </button>
-          <button
-            onClick={() => setActiveTab('menu')}
-            className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'menu' ? 'bg-[#1C1A17] text-white shadow-md' : 'text-[#8A8278] hover:bg-slate-50'}`}
-          >
-            <Edit2 className="w-4 h-4" />
-            Kelola Menu
-          </button>
+      <main className="max-w-6xl mx-auto px-4 py-5 pb-20">
+        {/* Header & Controls */}
+        <div className="flex flex-col gap-3 mb-5 mt-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-[#1C1A17]">Katalog Menu</h2>
+              <p className="text-xs text-[#8A8278]">{menuItems.length} item terdaftar</p>
+            </div>
+            <button
+              onClick={() => setModalState({ mode: 'add' })}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-[#ad2a2a] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#8a2222] transition-colors shadow-md shadow-[#ad2a2a]/20 whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Menu</span>
+            </button>
+          </div>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A8278]" />
+            <input
+              type="text"
+              placeholder="Cari nama menu..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#ad2a2a] focus:ring-2 focus:ring-[#ad2a2a]/10 outline-none transition-all"
+            />
+          </div>
         </div>
 
-        {/* --- TAB: PESANAN MASUK --- */}
-        {activeTab === 'orders' && (
-          <div className="space-y-4 animate-fade-in">
-            <div className="flex justify-between items-end mb-2">
-              <div>
-                <h2 className="text-lg font-bold">Daftar Pesanan</h2>
-                <p className="text-xs text-[#8A8278]">Pantau dan update status pesanan pelanggan.</p>
-              </div>
-            </div>
+        {filteredMenu.length === 0 && (
+          <div className="text-center py-20 text-[#8A8278]">
+            <ChefHat className="w-10 h-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">Tidak ada menu ditemukan</p>
+          </div>
+        )}
 
-            <div className="grid gap-4">
-              {orders.map(order => (
-                <div key={order.id} className="bg-white rounded-2xl p-5 border border-[#1C1A17]/5 shadow-sm">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-lg">{order.id}</span>
-                        <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full 
-                          ${order.status === 'Baru' ? 'bg-blue-100 text-blue-700' : 
-                            order.status === 'Diproses' ? 'bg-amber-100 text-amber-700' : 
-                            'bg-emerald-100 text-emerald-700'}`}
+        {/* Mobile: Card Layout */}
+        <div className="flex flex-col gap-3 md:hidden">
+          {filteredMenu.map(item => (
+            <MenuCard
+              key={item.id}
+              item={item}
+              onEdit={(item) => setModalState({ mode: 'edit', item })}
+              onDelete={(item) => setDeleteTarget(item)}
+              onToggleStock={toggleStock}
+            />
+          ))}
+        </div>
+
+        {/* Desktop: Table Layout */}
+        <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-[#1C1A17]/5 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100 text-[10px] uppercase tracking-wider text-[#8A8278]">
+                  <th className="p-4 font-bold">Menu</th>
+                  <th className="p-4 font-bold">Kategori</th>
+                  <th className="p-4 font-bold">Harga</th>
+                  <th className="p-4 font-bold">Stok</th>
+                  <th className="p-4 font-bold text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredMenu.map(item => {
+                  const cat = CATEGORIES.find(c => c.id === item.category);
+                  return (
+                    <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-10 h-10 rounded-xl object-cover flex-shrink-0" onError={e => { e.target.style.display = 'none'; }} />
+                          ) : (
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex-shrink-0 flex items-center justify-center">
+                              <ChefHat className="w-5 h-5 text-slate-300" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-bold text-sm">{item.name}</p>
+                            {item.tag && <span className="text-[10px] font-bold text-[#ad2a2a] bg-[#ad2a2a]/10 px-1.5 py-0.5 rounded-md">{item.tag}</span>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">{cat?.name || item.category}</span>
+                      </td>
+                      <td className="p-4">
+                        <p className="font-bold text-sm text-[#ad2a2a]">{rupiah(item.price)}</p>
+                        <p className="text-[10px] text-[#8A8278]">{item.unit}</p>
+                      </td>
+                      <td className="p-4">
+                        <button
+                          onClick={() => toggleStock(item.id)}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${item.stock === 'Tersedia' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-red-50 text-red-700 hover:bg-red-100'}`}
                         >
-                          {order.status}
-                        </span>
-                      </div>
-                      <p className="text-sm font-semibold text-[#1C1A17]">{order.name}</p>
-                      <p className="text-xs text-[#8A8278] flex items-center gap-1 mt-1"><Clock className="w-3 h-3" /> {order.date}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-[#8A8278] uppercase">Total Bayar</p>
-                      <p className="font-black text-[#ad2a2a] text-lg">{rupiah(order.total)}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-[#F7EFE2]/50 rounded-xl p-3 mb-4 border border-[#ad2a2a]/10">
-                    <p className="text-xs font-semibold leading-relaxed text-[#1C1A17]">{order.items}</p>
-                  </div>
-
-                  <div className="flex gap-2 justify-end pt-3 border-t border-dashed border-slate-200">
-                    {order.status === 'Baru' && (
-                      <button 
-                        onClick={() => handleUpdateStatus(order.id, 'Diproses')}
-                        className="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-lg hover:bg-amber-600 transition-colors"
-                      >
-                        Mulai Proses
-                      </button>
-                    )}
-                    {order.status === 'Diproses' && (
-                      <button 
-                        onClick={() => handleUpdateStatus(order.id, 'Selesai')}
-                        className="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-lg flex items-center gap-1 hover:bg-emerald-600 transition-colors"
-                      >
-                        <CheckCircle2 className="w-4 h-4" /> Tandai Selesai
-                      </button>
-                    )}
-                    {order.status === 'Selesai' && (
-                      <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 px-2 py-1">
-                        <CheckCircle2 className="w-4 h-4" /> Pesanan Selesai
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* --- TAB: KELOLA MENU --- */}
-        {activeTab === 'menu' && (
-          <div className="space-y-4 animate-fade-in">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
-              <div>
-                <h2 className="text-lg font-bold">Katalog Menu</h2>
-                <p className="text-xs text-[#8A8278]">Ubah harga atau status stok secara instan.</p>
-              </div>
-              <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A8278]" />
-                <input 
-                  type="text" 
-                  placeholder="Cari menu..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-64 pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#ad2a2a] focus:ring-2 focus:ring-[#ad2a2a]/10 outline-none transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm border border-[#1C1A17]/5 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-100 text-[10px] uppercase tracking-wider text-[#8A8278]">
-                      <th className="p-4 font-bold">Nama Menu</th>
-                      <th className="p-4 font-bold">Harga</th>
-                      <th className="p-4 font-bold">Stok</th>
-                      <th className="p-4 font-bold text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {menuItems.filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase())).map(item => (
-                      <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-4">
-                          <p className="font-bold text-sm text-[#1C1A17]">{item.name}</p>
-                        </td>
-                        <td className="p-4">
-                          <p className="font-semibold text-sm text-[#ad2a2a]">{rupiah(item.price)}</p>
-                        </td>
-                        <td className="p-4">
-                          <span className={`px-2 py-1 text-[10px] font-bold rounded-md ${item.stock === 'Tersedia' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-                            {item.stock}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right">
-                          <button className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors px-3 py-1.5 border border-blue-200 rounded-lg hover:bg-blue-50">
-                            Edit
+                          {item.stock === 'Tersedia'
+                            ? <ToggleRight className="w-3.5 h-3.5" />
+                            : <ToggleLeft className="w-3.5 h-3.5" />}
+                          {item.stock}
+                        </button>
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setModalState({ mode: 'edit', item })}
+                            className="p-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                          <button
+                            onClick={() => setDeleteTarget(item)}
+                            className="p-2 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
       </main>
+
+      {/* Form Modal */}
+      {modalState && (
+        <MenuFormModal
+          initial={modalState.mode === 'edit' ? modalState.item : null}
+          onSave={handleSaveMenu}
+          onClose={() => setModalState(null)}
+        />
+      )}
+
+      {/* Delete Confirm Dialog */}
+      {deleteTarget && (
+        <DeleteConfirmDialog
+          itemName={deleteTarget.name}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   );
 };

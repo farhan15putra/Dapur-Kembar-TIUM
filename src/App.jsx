@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CATEGORIES, MENU_ITEMS } from './data/menu';
+import { CATEGORIES } from './data/menu';
 import { ShoppingBag } from 'lucide-react';
 
 import Navbar from './components/Navbar';
@@ -13,15 +13,19 @@ import Footer from './components/Footer';
 import Login from './components/Login';
 import Profile from './components/Profile';
 import AdminDashboard from './components/AdminDashboard';
+import { MenuProvider, useMenu } from './context/MenuContext';
 
 const rupiah = (n) => 'Rp ' + n.toLocaleString('id-ID');
 
-export default function App() {
+// Inner app that can access MenuContext
+function AppInner() {
+  const { menuItems } = useMenu();
+
   const [orderMode, setOrderMode] = useState('regular');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [cartOpen, setCartOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('home'); // 'home', 'login', 'profile'
+  const [currentView, setCurrentView] = useState('home');
   const [currentUser, setCurrentUser] = useState(null);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const menuRef = useRef(null);
@@ -107,13 +111,14 @@ export default function App() {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  // ── Helpers ───────────────────────────────────
+  // ── Helpers — now use menuItems from context ──
   const getVisibleCategories = () => {
     return CATEGORIES.filter(c => c.id === 'kue-asin' || c.id === 'kue-manis' || c.id === 'minuman');
   };
   const getFilteredItems = (catId) => {
-    return MENU_ITEMS.filter(item =>
+    return menuItems.filter(item =>
       item.category === catId &&
+      item.stock !== 'Habis' &&
       (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
@@ -149,12 +154,12 @@ export default function App() {
   }
 
   if (currentView === 'admin' && currentUser?.role === 'admin') {
-    return <AdminDashboard 
-      user={currentUser} 
+    return <AdminDashboard
+      user={currentUser}
       onLogout={() => {
         setCurrentUser(null);
         setCurrentView('home');
-      }} 
+      }}
     />;
   }
 
@@ -180,16 +185,10 @@ export default function App() {
         user={currentUser}
       />
 
-      {/* Seamless flow — no section backgrounds */}
       <HeroBanner onExplore={() => menuRef.current?.scrollIntoView({ behavior: 'smooth' })} />
-
-      {/* Menu Showcase */}
       <MenuShowcase onCategoryClick={handleCategoryClick} />
-
-      {/* About Strip — compact brand tagline, non-disruptive */}
       <AboutStrip />
 
-      {/* Product Catalog */}
       <MenuCatalog
         menuRef={menuRef}
         orderMode={orderMode}
@@ -207,7 +206,6 @@ export default function App() {
 
       <Footer />
 
-      {/* Floating Cart */}
       <AnimatePresence>
         {cartCount > 0 && (
           <motion.button
@@ -261,5 +259,13 @@ export default function App() {
         savedAddresses={savedAddresses}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <MenuProvider>
+      <AppInner />
+    </MenuProvider>
   );
 }

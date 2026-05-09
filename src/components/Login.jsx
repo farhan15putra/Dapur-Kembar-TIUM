@@ -1,55 +1,76 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Lock, Eye, EyeOff, ShieldCheck, User } from 'lucide-react';
+
+// ─── Admin Credentials ───────────────────────────────────────────────────────
+const ADMIN_CREDENTIALS = { username: 'admin', password: 'dapurkembar123' };
 
 const Login = ({ onBack, onLoginSuccess }) => {
-  const [isRegister, setIsRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [shake, setShake] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Simulate successful login/register
-    const userData = {
-      name: isRegister ? name : (email.split('@')[0] || 'User'),
-      email: email,
-      role: email === 'admin@dapurkembar.com' ? 'admin' : 'user'
-    };
-    onLoginSuccess(userData);
+    setError('');
+    setLoading(true);
+
+    // Simulate a small async delay
+    setTimeout(() => {
+      setLoading(false);
+      if (
+        username.trim() === ADMIN_CREDENTIALS.username &&
+        password === ADMIN_CREDENTIALS.password
+      ) {
+        onLoginSuccess({ name: 'Administrator', username, role: 'admin' });
+      } else {
+        setError('Username atau password salah. Silakan coba lagi.');
+        triggerShake();
+      }
+    }, 600);
   };
 
   return (
     <div className="min-h-screen bg-[#F7EFE2] flex flex-col md:flex-row">
       {/* Mobile Back Button */}
-      <button 
+      <button
         onClick={onBack}
         className="md:hidden absolute top-5 left-5 z-10 w-10 h-10 bg-white/50 backdrop-blur-md rounded-full flex items-center justify-center text-[#1C1A17] hover:bg-white/80 transition-all"
       >
         <ArrowLeft className="w-5 h-5" />
       </button>
 
-      {/* Image Section (Hidden on mobile, takes half screen on desktop) */}
+      {/* Image Section */}
       <div className="hidden md:flex md:w-1/2 relative bg-[#ad2a2a]/10 overflow-hidden">
-        <button 
+        <button
           onClick={onBack}
           className="absolute top-8 left-8 z-10 w-11 h-11 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <img 
-          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200" 
-          alt="Dapur Kembar Pastry" 
+        <img
+          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200"
+          alt="Dapur Kembar"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* Dark overlay for contrast */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-12">
           <div>
+            <div className="flex items-center gap-2 mb-3">
+              <ShieldCheck className="w-5 h-5 text-[#e8a87c]" />
+              <span className="text-[#e8a87c] text-xs font-bold uppercase tracking-widest font-['DM_Sans']">Admin Portal</span>
+            </div>
             <h2 className="font-['Cormorant_Garamond'] text-white text-4xl font-semibold italic mb-2">
-              Kualitas Premium
+              Dapur Kembar
             </h2>
             <p className="font-['DM_Sans'] text-white/80 text-sm tracking-wide">
-              Masuk untuk kelola pesanan dan nikmati kemudahan bertransaksi di Dapur Kembar.
+              Panel khusus admin untuk mengelola menu dan pesanan pelanggan.
             </p>
           </div>
         </div>
@@ -57,74 +78,68 @@ const Login = ({ onBack, onLoginSuccess }) => {
 
       {/* Form Section */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-12 min-h-screen relative">
-        <div className="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-3xl p-8 md:p-10 shadow-2xl shadow-[#1C1A17]/5 border border-white">
-          
+        <div
+          className="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-3xl p-8 md:p-10 shadow-2xl shadow-[#1C1A17]/5 border border-white"
+          style={shake ? { animation: 'shake 0.4s ease' } : {}}
+        >
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-full bg-[#ad2a2a] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#ad2a2a]/20">
-              <span className="text-white font-bold text-sm font-['DM_Sans'] tracking-wide">DK</span>
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#ad2a2a] to-[#7a1d1d] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#ad2a2a]/30">
+              <ShieldCheck className="w-7 h-7 text-white" />
             </div>
             <h1 className="font-['Cormorant_Garamond'] text-3xl font-semibold text-[#1C1A17] mb-1">
-              {isRegister ? 'Daftar Akun' : 'Selamat Datang'}
+              Admin Login
             </h1>
             <p className="font-['DM_Sans'] text-[#8A8278] text-xs uppercase tracking-widest">
-              {isRegister ? 'Lengkapi Data Diri Anda' : 'Silakan Masuk ke Akun Anda'}
+              Masuk ke Panel Administrator
             </p>
           </div>
 
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
+              <p className="text-xs font-semibold text-red-700 font-['DM_Sans']">{error}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name Field (Only for Register) */}
-            {isRegister && (
-              <div className="space-y-1.5 animate-fade-in">
-                <label className="font-['DM_Sans'] text-[11px] font-bold text-[#8A8278] uppercase tracking-wider ml-1">
-                  Nama Lengkap
-                </label>
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Masukkan nama lengkap"
-                    required={isRegister}
-                    className="w-full px-4 py-3.5 bg-white border border-[#1C1A17]/10 rounded-xl text-[13px] font-['DM_Sans'] font-medium text-[#1C1A17] placeholder:text-[#8A8278] focus:border-[#ad2a2a]/50 focus:outline-none focus:ring-3 focus:ring-[#ad2a2a]/10 transition-all"
-                  />
-                </div>
-              </div>
-            )}
-            {/* Email Field */}
+            {/* Username */}
             <div className="space-y-1.5">
               <label className="font-['DM_Sans'] text-[11px] font-bold text-[#8A8278] uppercase tracking-wider ml-1">
-                Email atau No. HP
+                Username
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A8278]" strokeWidth={1.8} />
-                <input 
-                  type="text" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Masukkan email / no. hp"
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A8278]" strokeWidth={1.8} />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => { setUsername(e.target.value); setError(''); }}
+                  placeholder="Masukkan username admin"
                   required
-                  className="w-full pl-11 pr-4 py-3.5 bg-white border border-[#1C1A17]/10 rounded-xl text-[13px] font-['DM_Sans'] font-medium text-[#1C1A17] placeholder:text-[#8A8278] focus:border-[#ad2a2a]/50 focus:outline-none focus:ring-3 focus:ring-[#ad2a2a]/10 transition-all"
+                  autoComplete="username"
+                  className="w-full pl-11 pr-4 py-3.5 bg-white border border-[#1C1A17]/10 rounded-xl text-[13px] font-['DM_Sans'] font-medium text-[#1C1A17] placeholder:text-[#8A8278] focus:border-[#ad2a2a]/50 focus:outline-none focus:ring-2 focus:ring-[#ad2a2a]/10 transition-all"
                 />
               </div>
             </div>
 
-            {/* Password Field */}
+            {/* Password */}
             <div className="space-y-1.5">
               <label className="font-['DM_Sans'] text-[11px] font-bold text-[#8A8278] uppercase tracking-wider ml-1">
-                Kata Sandi
+                Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A8278]" strokeWidth={1.8} />
-                <input 
+                <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Masukkan kata sandi"
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                  placeholder="Masukkan password"
                   required
-                  className="w-full pl-11 pr-12 py-3.5 bg-white border border-[#1C1A17]/10 rounded-xl text-[13px] font-['DM_Sans'] font-medium text-[#1C1A17] placeholder:text-[#8A8278] focus:border-[#ad2a2a]/50 focus:outline-none focus:ring-3 focus:ring-[#ad2a2a]/10 transition-all"
+                  autoComplete="current-password"
+                  className="w-full pl-11 pr-12 py-3.5 bg-white border border-[#1C1A17]/10 rounded-xl text-[13px] font-['DM_Sans'] font-medium text-[#1C1A17] placeholder:text-[#8A8278] focus:border-[#ad2a2a]/50 focus:outline-none focus:ring-2 focus:ring-[#ad2a2a]/10 transition-all"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8A8278] hover:text-[#1C1A17] transition-colors"
@@ -132,38 +147,43 @@ const Login = ({ onBack, onLoginSuccess }) => {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {!isRegister && (
-                <div className="flex justify-end pt-1">
-                  <a href="#" className="font-['DM_Sans'] text-[11px] font-semibold text-[#ad2a2a] hover:underline underline-offset-2">
-                    Lupa kata sandi?
-                  </a>
-                </div>
-              )}
             </div>
 
-            {/* Submit Button */}
-            <button 
+            {/* Submit */}
+            <button
               type="submit"
-              className="w-full py-4 bg-[#1C1A17] hover:bg-[#3D3A35] text-white font-['DM_Sans'] font-semibold text-[13px] rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-[#1C1A17]/20 tracking-wide mt-2"
+              disabled={loading}
+              className="w-full py-4 bg-gradient-to-r from-[#ad2a2a] to-[#7a1d1d] hover:from-[#c03232] hover:to-[#8a2222] text-white font-['DM_Sans'] font-semibold text-[13px] rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-[#ad2a2a]/25 tracking-wide mt-2 disabled:opacity-70"
             >
-              {isRegister ? 'Daftar Sekarang' : 'Masuk'}
+              {loading ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Memverifikasi...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" />
+                  Masuk ke Dashboard
+                </>
+              )}
             </button>
           </form>
 
-          {/* Footer */}
-          <div className="mt-8 text-center border-t border-[#1C1A17]/5 pt-6">
-            <p className="font-['DM_Sans'] text-[12px] text-[#8A8278]">
-              {isRegister ? 'Sudah punya akun? ' : 'Belum punya akun? '}
-              <button 
-                onClick={() => setIsRegister(!isRegister)}
-                className="font-bold text-[#ad2a2a] hover:underline underline-offset-2"
-              >
-                {isRegister ? 'Masuk di sini' : 'Daftar Sekarang'}
-              </button>
-            </p>
-          </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-8px); }
+          40% { transform: translateX(8px); }
+          60% { transform: translateX(-6px); }
+          80% { transform: translateX(6px); }
+        }
+      `}</style>
     </div>
   );
 };
