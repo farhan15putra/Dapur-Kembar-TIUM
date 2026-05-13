@@ -11,8 +11,8 @@ const CATEGORY_DATA = [
   },
   {
     ...CATEGORIES.find(c => c.id === 'kue-manis'),
-    image: MENU_ITEMS.find(i => i.id === 6)?.image,
-    copy: 'Brownies, kue lumpur, sus buah, dan dadar gulung — manis yang bikin ketagihan.',
+    image: MENU_ITEMS.find(i => i.id === 12)?.image,
+    copy: 'Lapis legit, dessert box, talam ubi, dan bolu surabaya — manis yang bikin ketagihan.',
     index: '02',
   },
   {

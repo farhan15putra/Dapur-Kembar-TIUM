@@ -30,6 +30,16 @@ function AppInner() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const menuRef = useRef(null);
 
+  // ── Portal Admin Check (?portal=admin) ────────
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('portal') === 'admin') {
+      setCurrentView('login');
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const [userName, setUserName] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState('pickup');
   const [address, setAddress] = useState('');
@@ -156,6 +166,7 @@ function AppInner() {
   if (currentView === 'admin' && currentUser?.role === 'admin') {
     return <AdminDashboard
       user={currentUser}
+      onViewMenu={() => setCurrentView('home')}
       onLogout={() => {
         setCurrentUser(null);
         setCurrentView('home');
@@ -204,7 +215,7 @@ function AppInner() {
         getCartQty={getCartQty}
       />
 
-      <Footer />
+      <Footer user={currentUser} onLoginClick={() => setCurrentView('login')} />
 
       <AnimatePresence>
         {cartCount > 0 && (

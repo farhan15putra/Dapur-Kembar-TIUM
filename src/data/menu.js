@@ -1,4 +1,23 @@
 import { ChefHat, Sparkles, Package2, Utensils, Droplet, Coffee } from 'lucide-react';
+import risolMayoImg from '../assets/Risol Mayo.png';
+import lemperAyamImg from '../assets/Lemper Ayam.png';
+import talamUbiImg from '../assets/Talam Ubi.png';
+import airMineral210Img from '../assets/AirMineral 210ml.png';
+import airMineral600Img from '../assets/AirMineral600ml.png';
+import boluSurabayaImg from '../assets/Bolu Surabaya.png';
+import dessertBoxOreoImg from '../assets/Desert Box Oreo.png';
+import dessertBoxTiramisuImg from '../assets/Desert Box Tiramisu.png';
+import dessertBoxTripleChocolateImg from '../assets/Desert Box Triple Chocolate.png';
+import dessertBoxCappucinoChocoImg from '../assets/Dessert Box Cappucino Choco.png';
+import dessertBoxCreamCheeseImg from '../assets/Dessert Box Cream Cheese.png';
+import dessertBoxDurianMontongImg from '../assets/Dessert Box Durian Montong.png';
+import dessertBoxRedVelvetImg from '../assets/Dessert Box RedVelvet.png';
+import lapisLegitImg from '../assets/Lapis Legit.png';
+import pastelSayurImg from '../assets/Pastel Sayur.png';
+import putuMayangImg from '../assets/Putu Mayang.png';
+import risolChickenMushroomImg from '../assets/Risol Chicken Mushroom.png';
+import dimsumMentaiImg from '../assets/dimusmMentai.png';
+import sosisSoloImg from '../assets/Sosis Solo.png';
 
 export const CATEGORIES = [
   {
@@ -43,7 +62,7 @@ export const MENU_ITEMS = [
     unit: '/ pcs',
     description: 'Risol gurih dengan isian telur, sosis, dan mayones melimpah.',
     tag: 'Best Seller',
-    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400',
+    image: risolMayoImg,
   },
   {
     id: 2,
@@ -53,7 +72,7 @@ export const MENU_ITEMS = [
     unit: '/ pcs',
     description: 'Ketan pulen dengan isian ayam suwir bumbu rempah konvensional.',
     tag: 'Favorit',
-    image: 'https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&q=80&w=400',
+    image: lemperAyamImg,
   },
   {
     id: 3,
@@ -63,7 +82,7 @@ export const MENU_ITEMS = [
     unit: '/ pcs',
     description: 'Kulit pastel renyah dengan isian sayuran segar dan telur.',
     tag: null,
-    image: 'https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&q=80&w=400',
+    image: pastelSayurImg,
   },
   {
     id: 4,
@@ -73,61 +92,151 @@ export const MENU_ITEMS = [
     unit: '/ pcs',
     description: 'Dadar telur lembut berisi ayam cincang berbumbu gurih.',
     tag: null,
-    image: 'https://images.unsplash.com/photo-1626074353765-517a681e40be?auto=format&fit=crop&q=80&w=400',
+    image: sosisSoloImg,
+  },
+  {
+    id: 10,
+    name: 'Risol Chicken Mushroom',
+    category: 'kue-asin',
+    price: 4000,
+    unit: '/ pcs',
+    description: 'Risol renyah dengan isian ayam dan jamur creamy yang gurih.',
+    tag: 'Baru',
+    image: risolChickenMushroomImg,
+  },
+  {
+    id: 11,
+    name: 'Dimsum Mentai',
+    category: 'kue-asin',
+    price: 15000,
+    unit: '/ porsi',
+    description: 'Dimsum ayam udang dengan saus mentai bakar di atasnya.',
+    tag: 'Premium',
+    image: dimsumMentaiImg,
   },
 
   // Kue Manis
   {
-    id: 5,
-    name: 'Kue Lumpur',
+    id: 9,
+    name: 'Talam Ubi',
     category: 'kue-manis',
     price: 3000,
     unit: '/ pcs',
-    description: 'Kue tekstur lembut dengan rasa kentang dan hiasan kismis.',
-    tag: 'Favorit',
-    image: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&q=80&w=400',
+    description: 'Kue tradisional dengan lapisan ubi manis dan santan gurih di atasnya.',
+    tag: 'Baru',
+    image: talamUbiImg,
   },
   {
-    id: 6,
-    name: 'Brownies Bites',
+    id: 12,
+    name: 'Bolu Surabaya',
+    category: 'kue-manis',
+    price: 5000,
+    unit: '/ slice',
+    description: 'Bolu lapis surabaya klasik yang lembut dan wangi.',
+    tag: 'Premium',
+    image: boluSurabayaImg,
+  },
+  {
+    id: 13,
+    name: 'Dessert Box Oreo',
+    category: 'kue-manis',
+    price: 25000,
+    unit: '/ box',
+    description: 'Dessert box dengan lapisan kue cokelat, cream, dan remahan biskuit Oreo.',
+    tag: 'Favorit',
+    image: dessertBoxOreoImg,
+  },
+  {
+    id: 14,
+    name: 'Dessert Box Tiramisu',
+    category: 'kue-manis',
+    price: 25000,
+    unit: '/ box',
+    description: 'Dessert box rasa kopi klasik ala Italia yang lumer di mulut.',
+    tag: null,
+    image: dessertBoxTiramisuImg,
+  },
+  {
+    id: 15,
+    name: 'Dessert Box Triple Chocolate',
+    category: 'kue-manis',
+    price: 25000,
+    unit: '/ box',
+    description: 'Tiga lapisan cokelat berbeda dalam satu box yang memanjakan lidah.',
+    tag: 'Best Seller',
+    image: dessertBoxTripleChocolateImg,
+  },
+  {
+    id: 16,
+    name: 'Dessert Box Cappucino Choco',
+    category: 'kue-manis',
+    price: 25000,
+    unit: '/ box',
+    description: 'Perpaduan sempurna rasa kopi cappucino dan cokelat premium.',
+    tag: null,
+    image: dessertBoxCappucinoChocoImg,
+  },
+  {
+    id: 17,
+    name: 'Dessert Box Cream Cheese',
+    category: 'kue-manis',
+    price: 25000,
+    unit: '/ box',
+    description: 'Lapisan keju lembut dipadukan dengan bolu yang manis dan pas.',
+    tag: null,
+    image: dessertBoxCreamCheeseImg,
+  },
+  {
+    id: 18,
+    name: 'Dessert Box Durian Montong',
+    category: 'kue-manis',
+    price: 35000,
+    unit: '/ box',
+    description: 'Dessert box premium dengan daging durian montong asli.',
+    tag: 'Premium',
+    image: dessertBoxDurianMontongImg,
+  },
+  {
+    id: 19,
+    name: 'Dessert Box Red Velvet',
+    category: 'kue-manis',
+    price: 25000,
+    unit: '/ box',
+    description: 'Kue red velvet dengan cream cheese frosting yang legit.',
+    tag: null,
+    image: dessertBoxRedVelvetImg,
+  },
+  {
+    id: 20,
+    name: 'Lapis Legit',
+    category: 'kue-manis',
+    price: 6000,
+    unit: '/ slice',
+    description: 'Kue lapis legit harum butter dengan resep tradisional.',
+    tag: 'Favorit',
+    image: lapisLegitImg,
+  },
+  {
+    id: 21,
+    name: 'Putu Mayang',
     category: 'kue-manis',
     price: 4000,
-    unit: '/ pcs',
-    description: 'Potongan brownies cokelat premium yang legit dan fudgy.',
-    tag: 'Best Seller',
-    image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=400',
-  },
-  {
-    id: 7,
-    name: 'Sus Buah',
-    category: 'kue-manis',
-    price: 4500,
-    unit: '/ pcs',
-    description: 'Kue sus dengan vla lembut dan topping potongan buah segar.',
+    unit: '/ porsi',
+    description: 'Kue basah tradisional dengan kuah kinca manis gurih.',
     tag: null,
-    image: 'https://images.unsplash.com/photo-1506459225024-1428097a7e18?auto=format&fit=crop&q=80&w=400',
-  },
-  {
-    id: 8,
-    name: 'Dadar Gulung',
-    category: 'kue-manis',
-    price: 3000,
-    unit: '/ pcs',
-    description: 'Dadar pandan gulung dengan isian kelapa parut manis (unti).',
-    tag: null,
-    image: 'https://images.unsplash.com/photo-1621303837174-89787a7d4729?auto=format&fit=crop&q=80&w=400',
+    image: putuMayangImg,
   },
 
   // Minuman
   {
     id: 301,
-    name: 'Air Mineral 240ml',
+    name: 'Air Mineral 210ml',
     category: 'minuman',
     price: 1500,
     unit: '/ cup',
-    description: 'Air mineral kemasan cup (gelas) ukuran 240ml yang praktis dan menyegarkan.',
+    description: 'Air mineral kemasan gelas ukuran 210ml.',
     tag: null,
-    image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&q=80&w=400',
+    image: airMineral210Img,
   },
   {
     id: 302,
@@ -135,8 +244,8 @@ export const MENU_ITEMS = [
     category: 'minuman',
     price: 3500,
     unit: '/ botol',
-    description: 'Air mineral kemasan botol ukuran tanggung 600ml, pas untuk pelepas dahaga.',
+    description: 'Air mineral kemasan botol ukuran tanggung 600ml.',
     tag: 'Pilihan',
-    image: 'https://images.unsplash.com/photo-1560023907-5f339617ea30?auto=format&fit=crop&q=80&w=400',
+    image: airMineral600Img,
   },
 ];

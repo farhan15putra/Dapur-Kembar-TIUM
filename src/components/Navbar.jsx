@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, User } from 'lucide-react';
+import logoImg from '../assets/favicon.png';
 
 const Navbar = ({ cartCount, onCartClick, onLoginClick, user }) => {
   const [scrolled, setScrolled]     = useState(false);
@@ -70,13 +71,13 @@ const Navbar = ({ cartCount, onCartClick, onLoginClick, user }) => {
           whileTap={{ scale: 0.98 }}
           transition={{ type: 'spring', stiffness: 400, damping: 22 }}
         >
-          <motion.div
-            className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[#ad2a2a] flex items-center justify-center shadow-sm"
+          <motion.img
+            src={logoImg}
+            alt="Dapur Kembar"
+            className="w-8 h-8 md:w-9 md:h-9 object-contain drop-shadow-sm"
             whileHover={{ rotate: [0, -6, 6, 0] }}
             transition={{ duration: 0.5 }}
-          >
-            <span className="text-white font-bold text-[10px] md:text-[11px] tracking-wide font-['DM_Sans']">DK</span>
-          </motion.div>
+          />
           <motion.span
             className="font-['Cormorant_Garamond'] font-semibold text-[18px] md:text-[22px] italic leading-none tracking-wide"
             animate={{ color: light ? '#ffffff' : '#1C1A17' }}
@@ -89,62 +90,54 @@ const Navbar = ({ cartCount, onCartClick, onLoginClick, user }) => {
         {/* ── Right actions ── */}
         <div className="flex items-center gap-1.5 md:gap-3">
 
-          {/* Login / Profile — desktop */}
-          <motion.button
-            onClick={onLoginClick}
-            className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full font-['DM_Sans'] font-semibold text-[13px] relative overflow-hidden"
-            animate={{
-              color: light
-                ? 'rgba(255,255,255,0.88)'
-                : (user ? '#ad2a2a' : '#1C1A17'),
-            }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            whileHover={{
-              backgroundColor: light ? 'rgba(255,255,255,0.12)' : 'rgba(28,26,23,0.05)',
-            }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {user ? (
-              <>
+          {/* Login / Profile — only show if logged in (for Logout/Dashboard) */}
+          {user && (
+            <>
+              {/* Desktop */}
+              <motion.button
+                onClick={onLoginClick}
+                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full font-['DM_Sans'] font-semibold text-[13px] relative overflow-hidden"
+                animate={{
+                  color: light
+                    ? 'rgba(255,255,255,0.88)'
+                    : '#ad2a2a',
+                }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                whileHover={{
+                  backgroundColor: light ? 'rgba(255,255,255,0.12)' : 'rgba(173,42,42,0.05)',
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <motion.div
                   className="w-5 h-5 rounded-full bg-[#ad2a2a] text-white flex items-center justify-center text-[10px] font-bold"
                   whileHover={{ scale: 1.15 }}
                 >
                   {user.name.charAt(0).toUpperCase()}
                 </motion.div>
-                Profil
-              </>
-            ) : (
-              <>
-                <User className="w-[18px] h-[18px]" strokeWidth={1.8} />
-                Masuk
-              </>
-            )}
-          </motion.button>
+                {user.role === 'admin' ? 'Dashboard' : 'Profil'}
+              </motion.button>
 
-          {/* Login — mobile */}
-          <motion.button
-            onClick={onLoginClick}
-            className="md:hidden p-2 rounded-full"
-            animate={{
-              color: light
-                ? 'rgba(255,255,255,0.88)'
-                : (user ? '#ad2a2a' : '#1C1A17'),
-            }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            whileTap={{ scale: 0.9 }}
-            whileHover={{
-              backgroundColor: light ? 'rgba(255,255,255,0.12)' : 'rgba(28,26,23,0.05)',
-            }}
-          >
-            {user ? (
-              <div className="w-5 h-5 rounded-full bg-[#ad2a2a] text-white flex items-center justify-center text-[10px] font-bold">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-            ) : (
-              <User className="w-[20px] h-[20px]" strokeWidth={1.8} />
-            )}
-          </motion.button>
+              {/* Mobile */}
+              <motion.button
+                onClick={onLoginClick}
+                className="md:hidden p-2 rounded-full"
+                animate={{
+                  color: light
+                    ? 'rgba(255,255,255,0.88)'
+                    : '#ad2a2a',
+                }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                whileTap={{ scale: 0.9 }}
+                whileHover={{
+                  backgroundColor: light ? 'rgba(255,255,255,0.12)' : 'rgba(28,26,23,0.05)',
+                }}
+              >
+                <div className="w-5 h-5 rounded-full bg-[#ad2a2a] text-white flex items-center justify-center text-[10px] font-bold">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+              </motion.button>
+            </>
+          )}
 
           {/* Divider */}
           <motion.div

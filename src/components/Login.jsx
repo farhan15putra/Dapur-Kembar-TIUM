@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Lock, Eye, EyeOff, ShieldCheck, User } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MENU_ITEMS } from '../data/menu';
+
+// Pick backgrounds for slideshow
+const LOGIN_BGS = [
+  MENU_ITEMS.find(i => i.id === 1)?.image,
+  MENU_ITEMS.find(i => i.id === 12)?.image,
+  MENU_ITEMS.find(i => i.id === 11)?.image,
+].filter(Boolean);
 
 // ─── Admin Credentials ───────────────────────────────────────────────────────
 const ADMIN_CREDENTIALS = { username: 'admin', password: 'dapurkembar123' };
@@ -11,6 +20,15 @@ const Login = ({ onBack, onLoginSuccess }) => {
   const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [bgIndex, setBgIndex] = useState(0);
+
+  useEffect(() => {
+    if (LOGIN_BGS.length <= 1) return;
+    const interval = setInterval(() => {
+      setBgIndex((prev) => (prev + 1) % LOGIN_BGS.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const triggerShake = () => {
     setShake(true);
@@ -48,19 +66,30 @@ const Login = ({ onBack, onLoginSuccess }) => {
       </button>
 
       {/* Image Section */}
-      <div className="hidden md:flex md:w-1/2 relative bg-[#ad2a2a]/10 overflow-hidden">
+      <div className="hidden md:flex md:w-1/2 relative bg-[#14100c] overflow-hidden">
         <button
           onClick={onBack}
           className="absolute top-8 left-8 z-10 w-11 h-11 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-all"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <img
-          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200"
-          alt="Dapur Kembar"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-12">
+        
+        <div className="absolute inset-0 z-0">
+          <AnimatePresence>
+            <motion.img
+              key={bgIndex}
+              src={LOGIN_BGS[bgIndex]}
+              alt="Dapur Kembar"
+              className="absolute inset-0 w-full h-full object-cover"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: 'easeInOut' }}
+            />
+          </AnimatePresence>
+        </div>
+
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-12">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <ShieldCheck className="w-5 h-5 text-[#e8a87c]" />

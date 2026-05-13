@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MENU_ITEMS } from '../data/menu';
 
-gsap.registerPlugin(ScrollTrigger);
-
-// Pick the hero background — use a visually strong food image
-const HERO_BG = MENU_ITEMS.find(i => i.id === 1)?.image;
+// Pick hero backgrounds for slideshow
+const HERO_BGS = [
+  MENU_ITEMS.find(i => i.id === 1)?.image,
+  MENU_ITEMS.find(i => i.id === 12)?.image, // Kue Manis (Bolu Surabaya)
+  MENU_ITEMS.find(i => i.id === 11)?.image, // Dimsum Mentai
+].filter(Boolean);
 
 /* ── Staggered word reveal ── */
 function SplitReveal({ text, className, delay = 0, color }) {
@@ -36,8 +36,8 @@ function SplitReveal({ text, className, delay = 0, color }) {
 
 const HeroBanner = ({ onExplore }) => {
   const sectionRef = useRef(null);
-  const bgRef = useRef(null);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [bgIndex, setBgIndex] = useState(0);
 
   useEffect(() => {
     const onScroll = () => setHasScrolled(window.scrollY > 10);
@@ -45,21 +45,12 @@ const HeroBanner = ({ onExplore }) => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Parallax — image moves slower than scroll
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.to(bgRef.current, {
-        yPercent: 18,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1.8,
-        },
-      });
-    }, sectionRef);
-    return () => ctx.revert();
+    if (HERO_BGS.length <= 1) return;
+    const interval = setInterval(() => {
+      setBgIndex((prev) => (prev + 1) % HERO_BGS.length);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -69,15 +60,21 @@ const HeroBanner = ({ onExplore }) => {
     >
       {/* Sentinel — Navbar watches this to switch text color */}
       <div id="hero-sentinel" className="absolute bottom-0 left-0 w-full h-1 pointer-events-none" />
-      {/* ── Background image ── */}
-      <div className="absolute inset-0 z-0">
-        <img
-          ref={bgRef}
-          src={HERO_BG}
-          alt=""
-          className="w-full h-[115%] object-cover object-center -mt-[7.5%]"
-          draggable={false}
-        />
+      {/* ── Background image slideshow ── */}
+      <div className="absolute inset-0 z-0 bg-[#14100c]">
+        <AnimatePresence>
+          <motion.img
+            key={bgIndex}
+            src={HERO_BGS[bgIndex]}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5, ease: 'easeInOut' }}
+            draggable={false}
+          />
+        </AnimatePresence>
       </div>
 
       {/* ── Dark warm overlay ── */}

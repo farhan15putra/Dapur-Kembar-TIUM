@@ -1,8 +1,9 @@
 import React, { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Phone, MapPin, Clock, ExternalLink } from 'lucide-react';
+import logoImg from '../assets/favicon.png';
 
-const Footer = () => {
+const Footer = ({ user, onLoginClick }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-60px 0px' });
 
@@ -21,9 +22,11 @@ const Footer = () => {
             transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-full bg-[#ad2a2a] flex items-center justify-center shadow-md shadow-[#ad2a2a]/20 shrink-0">
-                <span className="text-white font-bold text-[10px] font-['DM_Sans'] tracking-wide">DK</span>
-              </div>
+              <img
+                src={logoImg}
+                alt="Dapur Kembar"
+                className="w-9 h-9 object-contain drop-shadow-sm shrink-0"
+              />
               <p className="font-['Cormorant_Garamond'] text-[20px] font-semibold italic text-[#1C1A17]">
                 Dapur Kembar
               </p>
@@ -99,7 +102,7 @@ const Footer = () => {
               Layanan
             </p>
             <div className="space-y-2.5">
-              {['Kue Asin & Gurih', 'Kue Manis', 'Snack Box Custom', 'Katering Acara'].map((item) => (
+              {['Kue Asin & Gurih', 'Kue Manis', 'Minuman Segar', 'Simulasi Snack Box', 'Pemesanan Online'].map((item) => (
                 <p key={item} className="font-['DM_Sans'] text-[13px] text-[#3D3A35]">
                   {item}
                 </p>
@@ -118,6 +121,14 @@ const Footer = () => {
         >
           <p className="font-['DM_Sans'] text-[#8A8278] text-[11px] tracking-wide">
             © {new Date().getFullYear()} Dapur Kembar. All rights reserved.
+            {!user && (
+              <button 
+                onClick={onLoginClick}
+                className="ml-2 opacity-[0.03] hover:opacity-100 transition-opacity cursor-default"
+              >
+                · Admin
+              </button>
+            )}
           </p>
           <p className="font-['DM_Sans'] text-[#8A8278]/60 text-[11px] uppercase tracking-[0.2em]">
             Katering &amp; Snack Box · Jakarta Timur

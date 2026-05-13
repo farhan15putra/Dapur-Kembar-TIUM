@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import {
   LogOut, ChefHat, Search, Edit2,
-  Plus, Trash2, ToggleLeft, ToggleRight, X, Save, ImagePlus, AlertTriangle
+  Plus, Trash2, ToggleLeft, ToggleRight, X, Save, ImagePlus, AlertTriangle, LayoutGrid, Sparkles
 } from 'lucide-react';
 import { useMenu } from '../context/MenuContext';
-import { CATEGORIES } from '../data/menu';
+import { CATEGORIES, MENU_ITEMS as INITIAL_DATA } from '../data/menu';
+import { supabase } from '../lib/supabaseClient';
 
 const rupiah = (n) => 'Rp ' + Number(n).toLocaleString('id-ID');
 
@@ -44,22 +45,43 @@ function DeleteConfirmDialog({ itemName, onConfirm, onCancel }) {
 // ── Menu Form Modal ──────────────────────────────────────────────────────────
 function MenuFormModal({ initial, onSave, onClose }) {
   const [form, setForm] = useState(initial || EMPTY_FORM);
+  const [uploading, setUploading] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const fileInputRef = useRef(null);
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) return alert('File harus berupa gambar.');
     if (file.size > 5 * 1024 * 1024) return alert('Ukuran gambar maksimal 5MB.');
-    const reader = new FileReader();
-    reader.onload = (ev) => set('image', ev.target.result);
-    reader.readAsDataURL(file);
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${fileName}`; // Straight into bucket
+
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
+
+      set('image', data.publicUrl);
+    } catch (err) {
+      alert('Gagal upload gambar: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim() || !form.price) return alert('Nama dan harga wajib diisi.');
-    onSave({ ...form, price: Number(form.price) });
+    await onSave({ ...form, price: Number(form.price) });
   };
 
   return (
@@ -107,9 +129,10 @@ function MenuFormModal({ initial, onSave, onClose }) {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current.click()}
-                    className="px-3 py-2 bg-white text-[#1C1A17] text-xs font-bold rounded-lg hover:bg-slate-100 transition-colors"
+                    disabled={uploading}
+                    className="px-3 py-2 bg-white text-[#1C1A17] text-xs font-bold rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
                   >
-                    Ganti Foto
+                    {uploading ? 'Uploading...' : 'Ganti Foto'}
                   </button>
                   <button
                     type="button"
@@ -124,10 +147,11 @@ function MenuFormModal({ initial, onSave, onClose }) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current.click()}
-                className="w-full h-32 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center gap-2 text-[#8A8278] hover:border-[#ad2a2a] hover:text-[#ad2a2a] hover:bg-[#ad2a2a]/5 transition-all"
+                disabled={uploading}
+                className="w-full h-32 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center gap-2 text-[#8A8278] hover:border-[#ad2a2a] hover:text-[#ad2a2a] hover:bg-[#ad2a2a]/5 transition-all disabled:opacity-50"
               >
                 <ImagePlus className="w-7 h-7" />
-                <span className="text-xs font-semibold">Klik untuk upload foto</span>
+                <span className="text-xs font-semibold">{uploading ? 'Sedang mengunggah...' : 'Klik untuk upload foto'}</span>
                 <span className="text-[10px]">PNG, JPG, WEBP · Maks. 5MB</span>
               </button>
             )}
@@ -222,7 +246,7 @@ function MenuCard({ item, onEdit, onDelete, onToggleStock }) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-const AdminDashboard = ({ user, onLogout }) => {
+const AdminDashboard = ({ user, onLogout, onViewMenu }) => {
   const { menuItems, addMenuItem, updateMenuItem, deleteMenuItem, toggleStock } = useMenu();
   const [searchQuery, setSearchQuery] = useState('');
   const [modalState, setModalState] = useState(null);
@@ -232,16 +256,34 @@ const AdminDashboard = ({ user, onLogout }) => {
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSaveMenu = (formData) => {
-    if (modalState.mode === 'add') addMenuItem(formData);
-    else updateMenuItem(modalState.item.id, formData);
+  const handleSaveMenu = async (formData) => {
+    if (modalState.mode === 'add') await addMenuItem(formData);
+    else await updateMenuItem(modalState.item.id, formData);
     setModalState(null);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deleteTarget) {
-      deleteMenuItem(deleteTarget.id);
+      await deleteMenuItem(deleteTarget.id);
       setDeleteTarget(null);
+    }
+  };
+
+  const [seeding, setSeeding] = useState(false);
+  const handleSeed = async () => {
+    if (!window.confirm('Isi database dengan data awal dari menu.js?')) return;
+    setSeeding(true);
+    try {
+      for (const item of INITIAL_DATA) {
+        // Prepare item for Supabase (remove local ID to let DB generate UUID)
+        const { id, ...itemData } = item;
+        await addMenuItem(itemData);
+      }
+      alert('Seeding berhasil! Database sekarang terisi.');
+    } catch (err) {
+      alert('Gagal seeding: ' + err.message);
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -259,11 +301,19 @@ const AdminDashboard = ({ user, onLogout }) => {
               <p className="text-[9px] sm:text-[10px] font-bold text-[#8A8278] uppercase tracking-wider">Dapur Kembar</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-bold">{user.name}</p>
               <p className="text-[10px] text-[#8A8278] uppercase tracking-wider">Administrator</p>
             </div>
+            <button
+              onClick={onViewMenu}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[#ad2a2a] hover:bg-[#ad2a2a]/10 active:scale-95 transition-all text-xs font-bold border border-[#ad2a2a]/20"
+              title="Lihat Menu Digital"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden sm:inline">Menu Digital</span>
+            </button>
             <button
               onClick={onLogout}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 active:scale-95 transition-all text-xs font-bold border border-red-100"
@@ -306,9 +356,29 @@ const AdminDashboard = ({ user, onLogout }) => {
         </div>
 
         {filteredMenu.length === 0 && (
-          <div className="text-center py-20 text-[#8A8278]">
-            <ChefHat className="w-10 h-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Tidak ada menu ditemukan</p>
+          <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+            <ChefHat className="w-12 h-12 mx-auto mb-4 text-[#8A8278] opacity-30" />
+            <h3 className="font-bold text-[#1C1A17] mb-1">Database Kosong</h3>
+            <p className="text-sm text-[#8A8278] mb-6 max-w-xs mx-auto">
+              Belum ada menu di database lu. Mau isi otomatis pakai data awal?
+            </p>
+            <button
+              onClick={handleSeed}
+              disabled={seeding}
+              className="px-6 py-3 bg-[#1C1A17] text-white rounded-xl text-sm font-bold hover:bg-[#2D2A26] transition-all flex items-center gap-2 mx-auto disabled:opacity-50"
+            >
+              {seeding ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Sedang Mengisi...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  Inisialisasi Data Awal
+                </>
+              )}
+            </button>
           </div>
         )}
 
