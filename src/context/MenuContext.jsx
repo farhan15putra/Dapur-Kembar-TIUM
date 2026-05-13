@@ -55,6 +55,29 @@ export function MenuProvider({ children }) {
     }
   };
 
+  const syncMenu = async (items) => {
+    try {
+      // Use upsert with 'name' as the conflict target
+      // This will update existing names and insert new ones
+      const { data, error } = await supabase
+        .from('menu')
+        .upsert(
+          items.map(item => {
+            const { id, ...rest } = item;
+            return { ...rest, stock: rest.stock || 'Tersedia' };
+          }), 
+          { onConflict: 'name' }
+        );
+      
+      if (error) throw error;
+      await fetchMenu();
+      return { success: true };
+    } catch (err) {
+      console.error('Error syncing menu:', err.message);
+      return { success: false, error: err.message };
+    }
+  };
+
   const updateMenuItem = async (id, updatedFields) => {
     try {
       const { error } = await supabase
@@ -94,7 +117,7 @@ export function MenuProvider({ children }) {
   };
 
   return (
-    <MenuContext.Provider value={{ menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem, toggleStock }}>
+    <MenuContext.Provider value={{ menuItems, loading, addMenuItem, syncMenu, updateMenuItem, deleteMenuItem, toggleStock }}>
       {children}
     </MenuContext.Provider>
   );

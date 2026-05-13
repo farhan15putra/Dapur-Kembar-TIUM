@@ -122,16 +122,6 @@ function MenuFormModal({ initial, onSave, onClose }) {
               onChange={handleImageUpload}
               className="hidden"
             />
-          {/* Upload Gambar */}
-          <div>
-            <label className="block text-[11px] font-bold text-[#8A8278] uppercase tracking-wider mb-1.5">Foto Menu</label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
             {form.image || uploading ? (
               <div className="relative group w-full h-40 rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
                 {uploading && (
@@ -180,7 +170,6 @@ function MenuFormModal({ initial, onSave, onClose }) {
                 <span className="text-[10px]">PNG, JPG, WEBP · Maks. 5MB</span>
               </button>
             )}
-          </div>
           </div>
 
           <div>
@@ -273,7 +262,7 @@ function MenuCard({ item, onEdit, onDelete, onToggleStock }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const AdminDashboard = ({ user, onLogout, onViewMenu }) => {
-  const { menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem, toggleStock } = useMenu();
+  const { menuItems, loading, addMenuItem, syncMenu, updateMenuItem, deleteMenuItem, toggleStock } = useMenu();
   const [searchQuery, setSearchQuery] = useState('');
   const [modalState, setModalState] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null); // item to delete
@@ -295,21 +284,18 @@ const AdminDashboard = ({ user, onLogout, onViewMenu }) => {
     }
   };
 
-  const [seeding, setSeeding] = useState(false);
-  const handleSeed = async () => {
-    if (!window.confirm('Isi database dengan data awal dari menu.js?')) return;
-    setSeeding(true);
+  const [syncing, setSyncing] = useState(false);
+  const handleSync = async () => {
+    if (!window.confirm('Sinkronisasi data dari menu.js? Menu dengan nama yang sama akan diupdate, menu baru akan ditambahkan.')) return;
+    setSyncing(true);
     try {
-      for (const item of INITIAL_DATA) {
-        // Prepare item for Supabase (remove local ID to let DB generate UUID)
-        const { id, ...itemData } = item;
-        await addMenuItem(itemData);
-      }
-      alert('Seeding berhasil! Database sekarang terisi.');
+      const result = await syncMenu(INITIAL_DATA);
+      if (result.success) alert('Sinkronisasi berhasil! Database sudah sesuai dengan kode.');
+      else alert('Gagal sinkronisasi: ' + result.error);
     } catch (err) {
-      alert('Gagal seeding: ' + err.message);
+      alert('Terjadi kesalahan: ' + err.message);
     } finally {
-      setSeeding(false);
+      setSyncing(false);
     }
   };
 
@@ -360,13 +346,24 @@ const AdminDashboard = ({ user, onLogout, onViewMenu }) => {
               <h2 className="text-lg font-bold text-[#1C1A17]">Katalog Menu</h2>
               <p className="text-xs text-[#8A8278]">{menuItems.length} item terdaftar</p>
             </div>
-            <button
-              onClick={() => setModalState({ mode: 'add' })}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-[#ad2a2a] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#8a2222] transition-colors shadow-md shadow-[#ad2a2a]/20 whitespace-nowrap"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Tambah Menu</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                className="flex items-center gap-2 px-3 py-2.5 bg-white border border-[#1C1A17]/10 text-[#1C1A17] rounded-xl text-xs font-bold hover:bg-slate-50 transition-all disabled:opacity-50"
+                title="Sinkronkan dengan menu.js"
+              >
+                {syncing ? <div className="w-4 h-4 border-2 border-[#1C1A17]/20 border-t-[#1C1A17] rounded-full animate-spin" /> : <Sparkles className="w-4 h-4 text-amber-500" />}
+                <span>{syncing ? 'Syncing...' : 'Sync with Code'}</span>
+              </button>
+              <button
+                onClick={() => setModalState({ mode: 'add' })}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-[#ad2a2a] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#8a2222] transition-colors shadow-md shadow-[#ad2a2a]/20 whitespace-nowrap"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tambah Menu</span>
+              </button>
+            </div>
           </div>
           {/* Search */}
           <div className="relative">
@@ -391,22 +388,22 @@ const AdminDashboard = ({ user, onLogout, onViewMenu }) => {
             <ChefHat className="w-12 h-12 mx-auto mb-4 text-[#8A8278] opacity-30" />
             <h3 className="font-bold text-[#1C1A17] mb-1">Database Kosong</h3>
             <p className="text-sm text-[#8A8278] mb-6 max-w-xs mx-auto">
-              Belum ada menu di database lu. Mau isi otomatis pakai data awal?
+              Belum ada menu di database lu. Mau sinkronisasi pakai data dari kode?
             </p>
             <button
-              onClick={handleSeed}
-              disabled={seeding}
+              onClick={handleSync}
+              disabled={syncing}
               className="px-6 py-3 bg-[#1C1A17] text-white rounded-xl text-sm font-bold hover:bg-[#2D2A26] transition-all flex items-center gap-2 mx-auto disabled:opacity-50"
             >
-              {seeding ? (
+              {syncing ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Sedang Mengisi...
+                  Sedang Sinkron...
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-amber-400" />
-                  Inisialisasi Data Awal
+                  Sync from menu.js
                 </>
               )}
             </button>
