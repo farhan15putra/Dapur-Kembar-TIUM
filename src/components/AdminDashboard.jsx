@@ -122,26 +122,51 @@ function MenuFormModal({ initial, onSave, onClose }) {
               onChange={handleImageUpload}
               className="hidden"
             />
-            {form.image ? (
-              <div className="relative group w-full h-40 rounded-xl overflow-hidden border border-slate-200">
-                <img src={form.image} alt="preview" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current.click()}
-                    disabled={uploading}
-                    className="px-3 py-2 bg-white text-[#1C1A17] text-xs font-bold rounded-lg hover:bg-slate-100 transition-colors disabled:opacity-50"
-                  >
-                    {uploading ? 'Uploading...' : 'Ganti Foto'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { set('image', ''); fileInputRef.current.value = ''; }}
-                    className="px-3 py-2 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                    Hapus
-                  </button>
-                </div>
+          {/* Upload Gambar */}
+          <div>
+            <label className="block text-[11px] font-bold text-[#8A8278] uppercase tracking-wider mb-1.5">Foto Menu</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            {form.image || uploading ? (
+              <div className="relative group w-full h-40 rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                {uploading && (
+                  <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center gap-2">
+                    <div className="w-6 h-6 border-2 border-[#ad2a2a]/20 border-t-[#ad2a2a] rounded-full animate-spin" />
+                    <span className="text-[9px] font-bold text-[#ad2a2a] uppercase tracking-widest animate-pulse">Mengunggah</span>
+                  </div>
+                )}
+                
+                {form.image ? (
+                  <img src={form.image} alt="preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImagePlus className="w-8 h-8 text-slate-300" />
+                  </div>
+                )}
+
+                {!uploading && form.image && (
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-10">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current.click()}
+                      className="px-3 py-2 bg-white text-[#1C1A17] text-xs font-bold rounded-lg hover:bg-slate-100 transition-colors"
+                    >
+                      Ganti Foto
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { set('image', ''); fileInputRef.current.value = ''; }}
+                      className="px-3 py-2 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <button
@@ -151,10 +176,11 @@ function MenuFormModal({ initial, onSave, onClose }) {
                 className="w-full h-32 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center gap-2 text-[#8A8278] hover:border-[#ad2a2a] hover:text-[#ad2a2a] hover:bg-[#ad2a2a]/5 transition-all disabled:opacity-50"
               >
                 <ImagePlus className="w-7 h-7" />
-                <span className="text-xs font-semibold">{uploading ? 'Sedang mengunggah...' : 'Klik untuk upload foto'}</span>
+                <span className="text-xs font-semibold">Klik untuk upload foto</span>
                 <span className="text-[10px]">PNG, JPG, WEBP · Maks. 5MB</span>
               </button>
             )}
+          </div>
           </div>
 
           <div>
@@ -247,7 +273,7 @@ function MenuCard({ item, onEdit, onDelete, onToggleStock }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 const AdminDashboard = ({ user, onLogout, onViewMenu }) => {
-  const { menuItems, addMenuItem, updateMenuItem, deleteMenuItem, toggleStock } = useMenu();
+  const { menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem, toggleStock } = useMenu();
   const [searchQuery, setSearchQuery] = useState('');
   const [modalState, setModalState] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null); // item to delete
@@ -355,7 +381,12 @@ const AdminDashboard = ({ user, onLogout, onViewMenu }) => {
           </div>
         </div>
 
-        {filteredMenu.length === 0 && (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-10 h-10 border-4 border-[#ad2a2a]/20 border-t-[#ad2a2a] rounded-full animate-spin mb-4" />
+            <p className="text-sm font-bold text-[#8A8278] animate-pulse">Menghubungkan ke database...</p>
+          </div>
+        ) : filteredMenu.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
             <ChefHat className="w-12 h-12 mx-auto mb-4 text-[#8A8278] opacity-30" />
             <h3 className="font-bold text-[#1C1A17] mb-1">Database Kosong</h3>
@@ -380,7 +411,7 @@ const AdminDashboard = ({ user, onLogout, onViewMenu }) => {
               )}
             </button>
           </div>
-        )}
+        ) : null}
 
         {/* Mobile: Card Layout */}
         <div className="flex flex-col gap-3 md:hidden">

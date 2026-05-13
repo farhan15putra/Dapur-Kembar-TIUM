@@ -25,8 +25,18 @@ function AppInner() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [cartOpen, setCartOpen] = useState(false);
-  const [currentView, setCurrentView] = useState('home');
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentView, setCurrentView] = useState(() => {
+    const savedUser = localStorage.getItem('dk_admin_user');
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+      return user.role === 'admin' ? 'admin' : 'profile';
+    }
+    return 'home';
+  });
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('dk_admin_user');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [savedAddresses, setSavedAddresses] = useState([]);
   const menuRef = useRef(null);
 
@@ -158,6 +168,7 @@ function AppInner() {
       onBack={() => setCurrentView('home')}
       onLoginSuccess={(userData) => {
         setCurrentUser(userData);
+        localStorage.setItem('dk_admin_user', JSON.stringify(userData));
         setCurrentView(userData.role === 'admin' ? 'admin' : 'profile');
       }}
     />;
@@ -169,6 +180,7 @@ function AppInner() {
       onViewMenu={() => setCurrentView('home')}
       onLogout={() => {
         setCurrentUser(null);
+        localStorage.removeItem('dk_admin_user');
         setCurrentView('home');
       }}
     />;
@@ -182,6 +194,7 @@ function AppInner() {
       onBack={() => setCurrentView('home')}
       onLogout={() => {
         setCurrentUser(null);
+        localStorage.removeItem('dk_admin_user');
         setCurrentView('home');
       }}
     />;
