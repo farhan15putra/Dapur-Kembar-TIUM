@@ -55,7 +55,11 @@ function AppInner() {
   const [address, setAddress] = useState('');
 
   // ── Regular Cart ──────────────────────────────
-  const [regularCart, setRegularCart] = useState([]);
+  const [regularCart, setRegularCart] = useState(() => {
+    const saved = localStorage.getItem('dk_cart');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const addRegular = (item) => {
     setRegularCart(prev => {
       const ex = prev.find(c => c.id === item.id);
@@ -70,7 +74,11 @@ function AppInner() {
   const removeRegular = (id) => setRegularCart(prev => prev.filter(c => c.id !== id));
 
   // ── Snack Box ─────────────────────────────────
-  const [sbConfig, setSbConfig] = useState({ items: [], water: false, boxes: 10 });
+  const [sbConfig, setSbConfig] = useState(() => {
+    const saved = localStorage.getItem('dk_sb_config');
+    return saved ? JSON.parse(saved) : { items: [], water: false, boxes: 10 };
+  });
+
   const toggleSbItem = (item) => {
     setSbConfig(prev => {
       const exists = prev.items.find(i => i.id === item.id);
@@ -80,6 +88,15 @@ function AppInner() {
       };
     });
   };
+
+  // ── Persistence Effect ────────────────────────
+  React.useEffect(() => {
+    localStorage.setItem('dk_cart', JSON.stringify(regularCart));
+  }, [regularCart]);
+
+  React.useEffect(() => {
+    localStorage.setItem('dk_sb_config', JSON.stringify(sbConfig));
+  }, [sbConfig]);
 
   // ── Computed Values ───────────────────────────
   const regularTotal = regularCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
