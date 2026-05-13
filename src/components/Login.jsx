@@ -11,7 +11,10 @@ const LOGIN_BGS = [
 ].filter(Boolean);
 
 // ─── Admin Credentials ───────────────────────────────────────────────────────
-const ADMIN_CREDENTIALS = { username: 'admin', password: 'dapurkembar123' };
+const ADMIN_CREDENTIALS = { 
+  username: import.meta.env.VITE_ADMIN_USERNAME, 
+  password: import.meta.env.VITE_ADMIN_PASSWORD 
+};
 
 const Login = ({ onBack, onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
