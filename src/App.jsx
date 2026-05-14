@@ -100,13 +100,12 @@ function AppInner() {
 
   // ── Computed Values ───────────────────────────
   const regularTotal = regularCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const sbUnitCost = sbConfig.items.reduce((sum, i) => sum + i.price, 0) + (sbConfig.water ? 1000 : 0);
+  const sbUnitCost = sbConfig.items.reduce((sum, i) => sum + i.price, 0) + (sbConfig.water ? 1000 : 0) + 2000;
   const sbTotal = sbUnitCost * sbConfig.boxes;
   const sbTypes = sbConfig.items.length;
   const sbRec = useMemo(() => {
     if (sbTypes < 3) return { ok: false, label: 'Kue Kurang Lengkap', hint: `Minimal pilih 3 jenis kue (+ ${3 - sbTypes} lagi)` };
-    if (sbTypes <= 4) return { ok: true, label: 'Gunakan Box M', hint: 'Kapasitas standar 3-4 kue.' };
-    return { ok: true, label: 'Gunakan Box L', hint: 'Ukuran ekstra untuk kue lebih banyak.' };
+    return { ok: true, label: 'Snack Box Valid', hint: 'Sudah termasuk harga dus Rp 2.000/box.' };
   }, [sbTypes]);
 
   const regularCount = regularCart.reduce((sum, item) => sum + item.qty, 0);
@@ -136,15 +135,15 @@ function AppInner() {
       if (sbConfig.items.length === 0) return alert('Keranjang Snack Box kosong.');
       if (sbTypes < 3) return alert('Snack Box belum valid (min 3 kue).');
       msg += `*=== RAKITAN SNACK BOX ===*\n`;
-      msg += `Ukuran: ${sbTypes <= 4 ? 'Box M' : 'Box L'}\nIsi per box:\n`;
+      msg += `Isi per box:\n`;
       sbConfig.items.forEach(c => msg += `  - 1x ${c.name}\n`);
       if (sbConfig.water) msg += `  - 1x Air Mineral Gelas\n`;
-      msg += `Harga per box: ${rupiah(sbUnitCost)}\nKuantitas: ${sbConfig.boxes} Box\n`;
+      msg += `Harga per box: ${rupiah(sbUnitCost)} (termasuk Dus)\nKuantitas: ${sbConfig.boxes} Box\n`;
       msg += `> Subtotal Snack Box: ${rupiah(sbTotal)}\n\n`;
       grandTotal += sbTotal;
     }
 
-    msg += `*=================*\n*TOTAL: ${rupiah(grandTotal)}*\n*=================*\nMohon konfirmasi ketersediaan ya.`;
+    msg += `*=================*\n*TOTAL: ${rupiah(grandTotal)}*\n*=================*\n\n_Catatan: Pesanan ini belum final. Mohon tunggu konfirmasi ketersediaan dan total biaya (termasuk ongkir) dari kami._`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 

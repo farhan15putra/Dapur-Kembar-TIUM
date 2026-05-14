@@ -16,6 +16,19 @@ const CartSheet = ({
   address, setAddress, handleOrder, savedAddresses = [],
 }) => {
   const [closing, setClosing] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const onOrderClick = () => {
+    const newErrors = {};
+    if (!userName.trim()) newErrors.userName = true;
+    if (deliveryMethod === 'delivery' && !address.trim()) newErrors.address = true;
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      handleOrder();
+    }
+  };
 
   const handleClose = () => {
     setClosing(true);
@@ -140,10 +153,7 @@ const CartSheet = ({
                   </div>
                 </div>
               ))}
-              <div className="flex justify-between items-center pt-2 border-t border-dashed border-[#1C1A17]/12">
-                <span className="text-xs font-bold text-[#8A8278] uppercase tracking-wider font-['DM_Sans']">Subtotal</span>
-                <span className="font-extrabold text-[#ad2a2a] font-['DM_Sans']">{rupiah(regularTotal)}</span>
-              </div>
+
             </div>
           )}
 
@@ -190,7 +200,7 @@ const CartSheet = ({
                     />
                     <span className="text-xs font-semibold flex items-center gap-1.5 font-['DM_Sans'] text-[#3D3A35]">
                       <Droplet className="w-3 h-3 text-blue-500" />
-                      Air Mineral (+Rp 1.000/box)
+                      Air Mineral Gelas (+Rp 1.000/box)
                     </span>
                   </label>
 
@@ -222,10 +232,7 @@ const CartSheet = ({
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center bg-[#ad2a2a]/6 rounded-lg p-2.5 border border-[#ad2a2a]/15">
-                    <span className="text-xs font-bold text-[#8a2222] font-['DM_Sans']">Subtotal</span>
-                    <span className="font-extrabold text-[#ad2a2a] font-['DM_Sans']">{rupiah(sbTotal)}</span>
-                  </div>
+
                 </div>
               )}
             </div>
@@ -235,9 +242,9 @@ const CartSheet = ({
           {!isEmpty && (
             <div className="space-y-4 pt-4 border-t border-[#1C1A17]/8">
               {/* Grand Total */}
-              <div className="bg-[#1C1A17] rounded-2xl p-5 text-center shadow-lg">
-                <p className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1 font-['DM_Sans']">Total Pesanan</p>
-                <p className="text-3xl font-black text-white font-['DM_Sans']">{rupiah(grandTotal)}</p>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-[#8A8278] uppercase tracking-wider font-['DM_Sans']">Total Pesanan</span>
+                <span className="font-extrabold text-[#ad2a2a] text-lg font-['DM_Sans']">{rupiah(grandTotal)}</span>
               </div>
 
               {/* Name */}
@@ -248,10 +255,20 @@ const CartSheet = ({
                 <input
                   type="text"
                   value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
+                  onChange={(e) => {
+                    setUserName(e.target.value);
+                    if (errors.userName) setErrors(p => ({ ...p, userName: false }));
+                  }}
                   placeholder="Masukkan nama Anda..."
-                  className="w-full bg-white border border-[#1C1A17]/10 rounded-xl px-4 py-3 text-sm font-medium font-['DM_Sans'] text-[#1C1A17] placeholder:text-[#8A8278] focus:border-[#ad2a2a]/50 focus:outline-none focus:ring-2 focus:ring-[#ad2a2a]/10 transition-all"
+                  className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-medium font-['DM_Sans'] text-[#1C1A17] placeholder:text-[#8A8278] focus:outline-none transition-all
+                    ${errors.userName
+                      ? 'border-[#ad2a2a] ring-2 ring-[#ad2a2a]/10'
+                      : 'border-[#1C1A17]/10 focus:border-[#ad2a2a]/50 focus:ring-2 focus:ring-[#ad2a2a]/10'
+                    }`}
                 />
+                {errors.userName && (
+                  <p className="text-[10px] text-[#ad2a2a] font-bold mt-0.5 ml-1 font-['DM_Sans']">Nama wajib diisi</p>
+                )}
               </div>
 
               {/* Delivery Method */}
@@ -308,17 +325,28 @@ const CartSheet = ({
                   )}
                   <textarea
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      if (errors.address) setErrors(p => ({ ...p, address: false }));
+                    }}
                     placeholder={savedAddresses.length > 0 ? 'Ketik alamat manual di sini...' : 'Masukkan alamat pengantaran...'}
                     rows="3"
-                    className="w-full bg-white border border-[#1C1A17]/10 rounded-xl px-4 py-3 text-sm font-medium font-['DM_Sans'] text-[#1C1A17] placeholder:text-[#8A8278] focus:border-[#ad2a2a]/50 focus:outline-none focus:ring-2 focus:ring-[#ad2a2a]/10 transition-all resize-none"
+                    className={`w-full bg-white border rounded-xl px-4 py-3 text-sm font-medium font-['DM_Sans'] text-[#1C1A17] placeholder:text-[#8A8278] focus:outline-none transition-all resize-none
+                      ${errors.address
+                        ? 'border-[#ad2a2a] ring-2 ring-[#ad2a2a]/10'
+                        : 'border-[#1C1A17]/10 focus:border-[#ad2a2a]/50 focus:ring-2 focus:ring-[#ad2a2a]/10'
+                      }`}
                   />
+                  {errors.address && (
+                    <p className="text-[10px] text-[#ad2a2a] font-bold mt-0.5 ml-1 font-['DM_Sans']">Alamat wajib diisi untuk pengantaran</p>
+                  )}
+                  <p className="text-[10px] text-[#8A8278] italic mt-1 ml-1 font-['DM_Sans']">*Ongkos kirim akan diinformasikan lebih lanjut via WhatsApp.</p>
                 </div>
               )}
 
               {/* WhatsApp Button */}
               <button
-                onClick={handleOrder}
+                onClick={onOrderClick}
                 className="w-full py-4 bg-[#ad2a2a] hover:bg-[#8a2020] text-white font-['DM_Sans'] font-semibold text-[13px] rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-lg shadow-[#ad2a2a]/25 tracking-wide"
               >
                 <MessageCircle className="w-5 h-5" />
